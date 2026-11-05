@@ -183,7 +183,7 @@ function render(){
  const a=document.getElementById('app');
  if(view==='home'){
   const tot=S.members.reduce((s,m)=>s+bal(m.id),0);
-  a.innerHTML='<header><div><h1>Hane</h1><div class="sub">Adını seç, içeceğine dokun, hesabına yazılsın.</div></div><div style="display:flex;gap:10px;align-items:center"><div class="bal"><span>Açık hesaplar toplamı</span><b>'+money(tot)+'</b></div></div></header>'+
+  a.innerHTML='<header><div><h1>Hane</h1><div class="sub">Adını seç, içeceğine dokun, hesabına yazılsın.</div></div><div style="display:flex;gap:10px;align-items:center"><button class="ghost" data-a="reload" aria-label="Ekranı yenile" style="min-width:64px;min-height:64px;font-size:28px;padding:0">↻</button><div class="bal"><span>Açık hesaplar toplamı</span><b>'+money(tot)+'</b></div></div></header>'+
   '<div class="grid">'+S.members.map(m=>{const b=bal(m.id);return '<button class="member" data-a="open" data-id="'+m.id+'"><span class="n">'+esc(m.name)+'</span><span class="b'+(b?' has':'')+'">'+(b?money(b):'Hesap temiz')+'</span></button>'}).join('')+'</div>'+
   '<div class="bar"><button class="ghost" data-a="admin">Yönetim</button></div><div class="sub" style="margin-top:14px">'+(DB?'Kayıtlar tüm cihazlarda ortak.':'Kayıtlar yalnızca bu cihazda tutuluyor.')+'</div>';
  }else if(view==='member'){
@@ -317,6 +317,7 @@ document.addEventListener('click',async e=>{
  else if(a==='rnext'){rM++;if(rM>11){rM=0;rY++}render()}
  else if(a==='csv')exportCsv();
  else if(a==='shop')go('shop');
+ else if(a==='reload'){toast('Yenileniyor…');setTimeout(()=>{const u=location.href.split('#')[0].replace(/[?&]r=\d+/,'');location.replace(u+(u.indexOf('?')>-1?'&':'?')+'r='+Date.now())},300)}
  else if(a==='bk'){if(await needPin())backup(false)}
  else if(a==='rs'){if(await needPin()){const f=document.getElementById('rfile');if(f){f.value='';f.click()}}}
  else if(a==='sp'){SP=+b.dataset.v;render()}
