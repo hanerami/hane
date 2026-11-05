@@ -251,7 +251,7 @@ function render(){
  }else{
   const paid=-S.entries.filter(e=>e.k==='pay').reduce((s,e)=>s+e.p,0);
   a.innerHTML='<header><div><button class="ghost" data-a="home">‹ Çıkış</button><h1 style="margin-top:14px">Yönetim</h1></div><div class="bal"><span>Tahsil edilen toplam</span><b>'+money(paid)+'</b></div></header>'+
-  '<div class="bar" style="margin:0"><button class="main" data-a="report">Aylık rapor ve Excel</button><button class="main" data-a="dues">Aidat takibi</button><button class="main" data-a="cash">Masraf ve kasa</button><button class="main" data-a="shop">Alışveriş listesi</button></div><h2>Açık hesaplar</h2><div class="log">'+S.members.map(m=>{const b=bal(m.id);return '<div class="cl"><span class="d">'+esc(m.name)+'</span><b>'+money(b)+'</b>'+(b?'<button class="main" data-a="settleA" data-id="'+m.id+'">Hesabı kapat</button>':'')+'</div>'}).join('')+'</div>'+
+  '<div class="bar" style="margin:0"><button class="main" data-a="report">Aylık rapor ve Excel</button><button class="main" data-a="dues">Aidat takibi</button><button class="main" data-a="cash">Masraf ve kasa</button><button class="main" data-a="shop">Alışveriş listesi</button><button class="main" data-a="cleanMail">Temiz hesaplara tebrik maili</button></div><h2>Açık hesaplar</h2><div class="log">'+S.members.map(m=>{const b=bal(m.id);return '<div class="cl"><span class="d">'+esc(m.name)+'</span><b>'+money(b)+'</b>'+(b?'<button class="main" data-a="settleA" data-id="'+m.id+'">Hesabı kapat</button>':'')+'</div>'}).join('')+'</div>'+
   '<h2>Üyeler</h2><div class="sub" style="margin:-6px 0 10px">Ad, e-posta (makbuz ve ekstre için) ve üye PIN’i (4 rakam, boş bırakırsan PIN sorulmaz)</div>'+S.members.map(m=>'<div class="ed" style="grid-template-columns:1fr 1fr 96px 130px"><input data-f="mname" data-id="'+m.id+'" value="'+esc(m.name)+'"><input data-f="memail" data-id="'+m.id+'" type="email" inputmode="email" autocapitalize="off" autocomplete="off" placeholder="E-posta" value="'+esc(m.email||'')+'"><input data-f="mpin" data-id="'+m.id+'" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="PIN" value="'+esc(m.pin||'')+'"><button class="ghost" style="min-height:48px;padding:8px 10px" data-a="ndues" data-id="'+m.id+'">'+(m.noDues?'Aidat yok':'Aidat öder')+'</button></div>').join('')+
   '<h2>İçecekler ve fiyatlar</h2>'+S.drinks.map(d=>'<div class="ed"><input data-f="dname" data-id="'+d.id+'" value="'+esc(d.name)+'"><input data-f="dprice" data-id="'+d.id+'" type="number" inputmode="decimal" min="0" step="0.5" value="'+d.price+'"><button data-a="rmd" data-id="'+d.id+'" aria-label="Sil">✕</button></div>').join('')+
   '<div class="bar"><button class="ghost" data-a="addd">+ İçecek ekle</button></div>'+
@@ -313,6 +313,7 @@ document.addEventListener('click',async e=>{
  else if(a==='rnext'){rM++;if(rM>11){rM=0;rY++}render()}
  else if(a==='csv')exportCsv();
  else if(a==='shop')go('shop');
+ else if(a==='cleanMail')cleanMail();
  else if(a==='sp'){SP=+b.dataset.v;render()}
  else if(a==='shopShare')shareDlg();
 });
@@ -388,6 +389,22 @@ function shareDlg(){
   if(r==='x')d.remove();
   else if(r==='s'){try{await navigator.share({title:'Hane alışveriş listesi',text:body})}catch(e){if(!e||e.name!=='AbortError')toast('Paylaşma açılamadı')}}
   else if(r==='c'){const ok=await copyText(body,ta);ta.value=body;toast(ok?'Liste kopyalandı':'Kopyalanamadı')}}}
+const CLEAN=['Hesabın tertemiz. Lokal sana minnettar, kasa sana âşık.',
+ 'Sıfır borç. Muhasebeci seni görünce ayağa kalkıyor.',
+ 'Bu temizlikte hesap ancak bayram sabahı görülür.',
+ 'Hesabın temiz ama bardağın da temiz. Bir çay söylesene.',
+ 'Bu kadar temiz hesap şüphe çekiyor. Evde mi içiyorsun?',
+ 'Kasa seni özledi. Ara sıra uğra da bir merhaba yaz.',
+ 'Hiç borcun yok. Ya çok dürüstsün ya da hiç gelmiyorsun. Hangisi?',
+ 'Kredi notun: AAA+. Lokal sana gönül rahatlığıyla bir çay borç verebilir.'];
+function cleanMail(){
+ const ms=S.members.filter(m=>m.email&&bal(m.id)===0);
+ if(!ms.length){toast('Borcu sıfır ve e-postası kayıtlı üye yok');return}
+ const NL=String.fromCharCode(10),msg=CLEAN[Math.floor(Math.random()*CLEAN.length)],to=ms.map(m=>m.email).join(',');
+ const sub='Hane Lokali Muhasebe Müdürlüğü – Tebrik',
+  body=['Sayın üyemiz,','','T.C. Hane Lokali Muhasebe Müdürlüğü kayıtlarına göre hakkınızda herhangi bir takibat bulunmamaktadır.','',msg,'','Tebrik eder, nice borçsuz günler dileriz.','','Hane'].join(NL);
+ const u='mailto:?bcc='+encodeURIComponent(to)+'&subject='+encodeURIComponent(sub)+'&body='+encodeURIComponent(body);
+ mailDlg({email:to},sub,body,u)}
 function chipsHtml(){return S.cats.map(x=>'<button class="ghost" style="min-height:44px;padding:8px 14px" data-a="chip" data-v="'+esc(x)+'">'+esc(x)+'</button>').join('')}
 function repo(){
  const s0=new Date(rY,rM,1).getTime(),e0=new Date(rY,rM+1,1).getTime();
