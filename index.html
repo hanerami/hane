@@ -32,6 +32,9 @@ h1{margin:0;font-size:34px;font-weight:800;letter-spacing:-.02em}
 .member .b.has{color:var(--ac);font-weight:800}
 .drink{background:var(--sf);border:2px solid var(--ln);border-radius:20px;padding:18px;text-align:left;min-height:110px;position:relative;display:flex;flex-direction:column;justify-content:space-between}
 .drink .n{font-size:22px;font-weight:800}
+.drink.pic{padding-left:96px}
+.drink.pic .n{padding-right:28px}
+.drink .i{position:absolute;left:16px;top:50%;transform:translateY(-50%);width:64px;height:64px;border-radius:12px;object-fit:cover}
 .drink .p{font-size:20px;color:var(--ac);font-weight:800}
 .drink .c{position:absolute;top:10px;right:12px;background:var(--ac);color:var(--on);border-radius:99px;min-width:34px;height:34px;display:grid;place-items:center;font-weight:800;padding:0 8px}
 .bal{background:var(--sf);border:2px solid var(--ln);border-radius:20px;padding:16px 22px;text-align:right}
@@ -186,7 +189,7 @@ function render(){
  }else if(view==='member'){
   const m=S.members.find(x=>x.id===cur),es=open_(cur).sort((x,y)=>y.t-x.t);
   a.innerHTML='<header><div><button class="ghost" data-a="home">‹ Geri</button><h1 style="margin-top:14px">'+esc(m.name)+'</h1></div><div class="bal"><span>Hesabın</span><b>'+money(bal(cur))+'</b></div></header>'+
-  '<div class="grid">'+S.drinks.map(d=>{const c=es.filter(e=>e.d===d.name).length;return '<button class="drink" data-a="add" data-id="'+d.id+'">'+(c?'<span class="c">'+c+'</span>':'')+'<span class="n">'+esc(d.name)+'</span><span class="p">'+money(d.price)+'</span></button>'}).join('')+'</div>'+
+  '<div class="grid">'+S.drinks.map(d=>{const c=es.filter(e=>e.d===d.name).length;const im=dImg(d.name);return '<button class="drink'+(im?' pic':'')+'" data-a="add" data-id="'+d.id+'">'+(im?'<img class="i" src="'+im+'" alt="">':'')+(c?'<span class="c">'+c+'</span>':'')+'<span class="n">'+esc(d.name)+'</span><span class="p">'+money(d.price)+'</span></button>'}).join('')+'</div>'+
   '<h2>Hesabındakiler</h2><div class="log">'+(es.length?es.map(e=>'<div'+(e.k==='pay'?' class="pay"':'')+'><span class="t">'+when(e.t)+'</span><span class="d">'+esc(e.d)+'</span><b>'+money(e.p)+'</b><button class="x" data-a="del" data-id="'+e.id+'" aria-label="Sil">✕</button></div>').join(''):'<div class="empty">Henüz bir şey yazılmadı.</div>')+'</div>'+
   (es.length?'<div class="bar"><button class="ghost" data-a="part" data-id="'+cur+'">Kısmi ödeme al</button><button class="main" data-a="settle" data-id="'+cur+'">Ödeme alındı, hesabı kapat</button></div>':'')+'<div class="bar"><button class="ghost" data-a="mail" data-id="'+cur+'">Makbuz ve ekstreyi mail ile gönder</button></div>';
  }else if(view==='cash'){
@@ -417,6 +420,8 @@ async function restore(file){
    await commitAll(ops)}catch(e){dbErr(e);return}}
  go('admin');snd('ok');setTimeout(()=>toast('Yedek geri yüklendi'),1700)}
 document.addEventListener('change',e=>{if(e.target.id==='rfile'&&e.target.files&&e.target.files[0])restore(e.target.files[0])});
+const IMGS=[['carlsberg','img/carlsberg.jpg']];
+function dImg(n){n=String(n).toLocaleLowerCase('tr-TR');for(const x of IMGS)if(n.indexOf(x[0])>-1)return x[1];return ''}
 function chipsHtml(){return S.cats.map(x=>'<button class="ghost" style="min-height:44px;padding:8px 14px" data-a="chip" data-v="'+esc(x)+'">'+esc(x)+'</button>').join('')}
 function repo(){
  const s0=new Date(rY,rM,1).getTime(),e0=new Date(rY,rM+1,1).getTime();
