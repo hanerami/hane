@@ -420,7 +420,7 @@ async function restore(file){
    await commitAll(ops)}catch(e){dbErr(e);return}}
  go('admin');snd('ok');setTimeout(()=>toast('Yedek geri yüklendi'),1700)}
 document.addEventListener('change',e=>{if(e.target.id==='rfile'&&e.target.files&&e.target.files[0])restore(e.target.files[0])});
-const IMGS=[['carlsberg','img/carlsberg.jpg'],['miller','img/miller2.jpg'],['bud','img/bud.jpg'],['tuborg','img/tuborg.jpg'],['perge','img/perge.jpg'],['heineken','img/heineken.jpg'],['şalgam','img/salgam.jpg'],['salgam','img/salgam.jpg'],['cola','img/kola.jpg'],['kola','img/kola.jpg'],['fanta','img/kola.jpg'],['sprite','img/kola.jpg'],['nespresso','img/nespresso.jpg'],['soda','img/soda.jpg']];
+const IMGS=[['carlsberg','img/carlsberg.jpg'],['miller','img/miller2.jpg'],['bud','img/bud.jpg'],['tuborg','img/tuborg.jpg'],['perge','img/perge.jpg'],['heineken','img/heineken.jpg'],['şalgam','img/salgam.jpg'],['salgam','img/salgam.jpg'],['cola','img/kola.jpg'],['kola','img/kola.jpg'],['fanta','img/kola.jpg'],['sprite','img/kola.jpg'],['nespresso','img/nespresso.jpg'],['soda','img/soda.jpg'],['türk kahve','img/turkkahvesi.jpg'],['turk kahve','img/turkkahvesi.jpg']];
 function dImg(n){n=String(n).toLocaleLowerCase('tr-TR');for(const x of IMGS)if(n.indexOf(x[0])>-1)return x[1];return ''}
 function chipsHtml(){return S.cats.map(x=>'<button class="ghost" style="min-height:44px;padding:8px 14px" data-a="chip" data-v="'+esc(x)+'">'+esc(x)+'</button>').join('')}
 function repo(){
