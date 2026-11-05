@@ -256,7 +256,8 @@ function render(){
   '<h2>İçecekler ve fiyatlar</h2>'+S.drinks.map(d=>'<div class="ed"><input data-f="dname" data-id="'+d.id+'" value="'+esc(d.name)+'"><input data-f="dprice" data-id="'+d.id+'" type="number" inputmode="decimal" min="0" step="0.5" value="'+d.price+'"><button data-a="rmd" data-id="'+d.id+'" aria-label="Sil">✕</button></div>').join('')+
   '<div class="bar"><button class="ghost" data-a="addd">+ İçecek ekle</button></div>'+
   '<h2>Güvenlik</h2><div class="ed m"><input data-f="pin" type="password" inputmode="numeric" maxlength="8" placeholder="Yeni PIN (şu an: '+'•'.repeat(S.pin.length)+')"></div>'+
-  '<div class="bar"><button class="ghost" data-a="snd">Tuş sesi: '+(SND?'açık':'kapalı')+'</button></div><div class="bar"><button class="ghost danger" data-a="wipe">Tüm verileri sıfırla</button></div>';
+  '<div class="bar"><button class="ghost" data-a="snd">Tuş sesi: '+(SND?'açık':'kapalı')+'</button></div><h2>Yedek</h2><div class="sub" style="margin:-6px 0 10px">Tüm veriler (üyeler, fiyatlar, hesaplar, kasa, aidat) tek dosyada. Dosyayı Dosyalar’a, Drive’a ya da maile koy.</div><div class="bar" style="margin-top:0"><button class="main" data-a="bk">Yedek al</button><button class="ghost" data-a="rs">Yedekten geri yükle</button></div><input id="rfile" type="file" accept=".json,application/json" style="display:none">'+
+  '<div class="bar"><button class="ghost danger" data-a="wipe">Tüm verileri sıfırla</button></div>';
  }
 }
 
@@ -313,6 +314,8 @@ document.addEventListener('click',async e=>{
  else if(a==='rnext'){rM++;if(rM>11){rM=0;rY++}render()}
  else if(a==='csv')exportCsv();
  else if(a==='shop')go('shop');
+ else if(a==='bk'){if(await needPin())backup(false)}
+ else if(a==='rs'){if(await needPin()){const f=document.getElementById('rfile');if(f){f.value='';f.click()}}}
  else if(a==='sp'){SP=+b.dataset.v;render()}
  else if(a==='shopShare')shareDlg();
 });
@@ -388,6 +391,32 @@ function shareDlg(){
   if(r==='x')d.remove();
   else if(r==='s'){try{await navigator.share({title:'Hane alışveriş listesi',text:body})}catch(e){if(!e||e.name!=='AbortError')toast('Paylaşma açılamadı')}}
   else if(r==='c'){const ok=await copyText(body,ta);ta.value=body;toast(ok?'Liste kopyalandı':'Kopyalanamadı')}}}
+function snap(){return{app:'hane',v:1,at:Date.now(),cfg:{pin:S.pin,members:S.members,drinks:S.drinks,aidat:S.aidat,dues:S.dues,open:S.open,cats:S.cats},entries:S.entries,cash:S.cash||[]}}
+function dl(name,txt,type){
+ try{const bl=new Blob([txt],{type:type}),u=URL.createObjectURL(bl),a=document.createElement('a');a.href=u;a.download=name;a.style.display='none';document.body.appendChild(a);a.click();setTimeout(()=>{a.remove();URL.revokeObjectURL(u)},4000);return true}
+ catch(e){try{window.open('data:'+type+','+encodeURIComponent(txt),'_blank');return true}catch(e2){return false}}}
+function stamp(){const d=new Date(),p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'_'+p(d.getHours())+p(d.getMinutes())}
+function backup(pre){const s=snap();if(dl('hane-'+(pre?'onceki-':'yedek-')+stamp()+'.json',JSON.stringify(s),'application/json'))toast(pre?'Mevcut veriler önce yedeklendi':'Yedek hazırlandı ('+s.entries.length+' kayıt)');else toast('Yedek kaydedilemedi')}
+async function commitAll(ops){for(let i=0;i<ops.length;i+=400){const b=DB.batch();ops.slice(i,i+400).forEach(f=>f(b));await b.commit()}}
+async function restore(file){
+ let d;try{d=JSON.parse(await file.text())}catch(e){toast('Dosya okunamadı');return}
+ if(!d||d.app!=='hane'||!d.cfg||!Array.isArray(d.cfg.members)||!Array.isArray(d.entries)){toast('Bu bir Hane yedeği değil');return}
+ const at=new Date(d.at).toLocaleString('tr-TR',{day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'});
+ if(!(await dlg({title:'Yedekten geri yüklensin mi?',msg:at+' tarihli yedek: '+d.cfg.members.length+' üye, '+d.entries.length+' hesap kaydı. Şu anki tüm veriler bu yedekle değiştirilecek. Önce mevcut veriler ayrıca yedeklenecek.',ok:'Geri yükle'})))return;
+ backup(true);
+ const c=d.cfg,cash=Array.isArray(d.cash)?d.cash:[];
+ const oldE=S.entries.map(x=>x.id),oldC=(S.cash||[]).map(x=>x.id),newE={},newC={};
+ d.entries.forEach(x=>{newE[x.id]=1});cash.forEach(x=>{newC[x.id]=1});
+ S.pin=c.pin||S.pin;S.members=c.members;S.drinks=c.drinks||[];S.aidat=c.aidat||0;S.dues=c.dues||{};S.open=c.open||0;S.cats=Array.isArray(c.cats)?c.cats:CATS0.slice();S.entries=d.entries;S.cash=cash;save();
+ if(DB){try{const ops=[];
+   ops.push(b=>b.set(DB.doc('cfg/main'),{pin:S.pin,members:S.members,drinks:S.drinks,aidat:S.aidat,dues:S.dues,open:S.open,cats:S.cats}));
+   oldE.filter(id=>!newE[id]).forEach(id=>ops.push(b=>b.delete(DB.collection('entries').doc(id))));
+   oldC.filter(id=>!newC[id]).forEach(id=>ops.push(b=>b.delete(DB.collection('cash').doc(id))));
+   d.entries.forEach(x=>ops.push(b=>b.set(DB.collection('entries').doc(x.id),x)));
+   cash.forEach(x=>ops.push(b=>b.set(DB.collection('cash').doc(x.id),x)));
+   await commitAll(ops)}catch(e){dbErr(e);return}}
+ go('admin');snd('ok');setTimeout(()=>toast('Yedek geri yüklendi'),1700)}
+document.addEventListener('change',e=>{if(e.target.id==='rfile'&&e.target.files&&e.target.files[0])restore(e.target.files[0])});
 function chipsHtml(){return S.cats.map(x=>'<button class="ghost" style="min-height:44px;padding:8px 14px" data-a="chip" data-v="'+esc(x)+'">'+esc(x)+'</button>').join('')}
 function repo(){
  const s0=new Date(rY,rM,1).getTime(),e0=new Date(rY,rM+1,1).getTime();
