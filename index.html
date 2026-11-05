@@ -214,6 +214,15 @@ function render(){
   (S.aidat>0?'':'<div class="sub" style="color:var(--bad);margin-bottom:10px">Önce aylık aidat tutarını yaz.</div>')+
   '<div class="dt"><div class="dr dh"><span class="dn" style="font-size:22px;font-weight:800;color:var(--ac)">'+dY+'</span>'+MN.map(x=>'<span class="dc dl">'+x+'</span>').join('')+'<span class="dm">Ödenen</span><span class="dm">Eksik</span></div>'+rows+'</div>'+
   '<div class="sub" style="margin-top:12px">Kutuya dokun: ödendi ya da ödenmedi. Kırmızı çerçeve, geçmiş ayda ödenmemiş aidat demek. Ödenmemiş toplam: <b>'+money(miss)+'</b></div>';
+ }else if(view==='shop'){
+  const P=shop(),pl={7:'1 hafta',14:'2 hafta',30:'1 ay'};
+  a.innerHTML='<header><div><button class="ghost" data-a="admin">‹ Yönetim</button><h1 style="margin-top:14px">Alışveriş listesi</h1><div class="sub">Son '+P.days+' günün tüketimine göre tahmin</div></div><div class="bal"><span>'+pl[SP]+' için alınacak</span><b>'+P.tot+' adet</b></div></header>'+
+  '<div class="bar" style="margin:0 0 10px">'+[7,14,30].map(d=>'<button class="'+(SP===d?'main':'ghost')+'" data-a="sp" data-v="'+d+'">'+pl[d]+'</button>').join('')+'</div>'+
+  (P.few?'<div class="sub" style="color:var(--bad);margin-bottom:10px">Henüz birkaç günlük kayıt var, tahmin kaba olabilir.</div>':'')+
+  '<div class="sub" style="margin-bottom:10px">Elde olanları yazarsan listeden düşülür.</div>'+
+  '<div class="log">'+(P.rows.length?P.rows.map(r=>'<div class="cl"><span class="d">'+esc(r.n)+'<br><span style="color:var(--mu);font-size:14px">son '+P.days+' günde '+r.c+' adet</span></span><input data-f="have" data-v="'+esc(r.n)+'" type="number" inputmode="numeric" min="0" step="1" placeholder="Elde" value="'+(HAVE[r.n]||'')+'" style="width:90px"><b style="min-width:90px;text-align:right">'+(r.buy?r.buy+' adet':'yeterli')+'</b></div>').join(''):'<div class="empty">Tahmin için henüz kayıt yok.</div>')+'</div>'+
+  (P.day?'<h2>Ne zaman yoğun?</h2><div class="log"><div class="cl"><span class="d">En yoğun gün</span><b>'+P.day+'</b></div><div class="cl"><span class="d">En yoğun saatler</span><b>'+P.hour+'</b></div></div>':'')+
+  (P.tot?'<div class="bar"><button class="main" data-a="shopShare">Listeyi paylaş</button></div>':'');
  }else if(view==='report'){
   const R=repo(),lab=new Date(rY,rM,1).toLocaleDateString('tr-TR',{month:'long',year:'numeric'});
   a.innerHTML='<header><div><button class="ghost" data-a="admin">‹ Yönetim</button><h1 style="margin-top:14px">Aylık rapor</h1><div class="sub">'+lab+'</div></div><div class="bal"><span>Aylık tüketim</span><b>'+money(R.tot)+'</b></div></header>'+
@@ -230,7 +239,7 @@ function render(){
  }else{
   const paid=-S.entries.filter(e=>e.k==='pay').reduce((s,e)=>s+e.p,0);
   a.innerHTML='<header><div><button class="ghost" data-a="home">‹ Çıkış</button><h1 style="margin-top:14px">Yönetim</h1></div><div class="bal"><span>Tahsil edilen toplam</span><b>'+money(paid)+'</b></div></header>'+
-  '<div class="bar" style="margin:0"><button class="main" data-a="report">Aylık rapor ve Excel</button><button class="main" data-a="dues">Aidat takibi</button><button class="main" data-a="cash">Masraf ve kasa</button></div><h2>Açık hesaplar</h2><div class="log">'+S.members.map(m=>{const b=bal(m.id);return '<div class="cl"><span class="d">'+esc(m.name)+'</span><b>'+money(b)+'</b>'+(b?'<button class="main" data-a="settleA" data-id="'+m.id+'">Hesabı kapat</button>':'')+'</div>'}).join('')+'</div>'+
+  '<div class="bar" style="margin:0"><button class="main" data-a="report">Aylık rapor ve Excel</button><button class="main" data-a="dues">Aidat takibi</button><button class="main" data-a="cash">Masraf ve kasa</button><button class="main" data-a="shop">Alışveriş listesi</button></div><h2>Açık hesaplar</h2><div class="log">'+S.members.map(m=>{const b=bal(m.id);return '<div class="cl"><span class="d">'+esc(m.name)+'</span><b>'+money(b)+'</b>'+(b?'<button class="main" data-a="settleA" data-id="'+m.id+'">Hesabı kapat</button>':'')+'</div>'}).join('')+'</div>'+
   '<h2>Üyeler</h2><div class="sub" style="margin:-6px 0 10px">Ad, e-posta (makbuz ve ekstre için) ve üye PIN’i (4 rakam, boş bırakırsan PIN sorulmaz)</div>'+S.members.map(m=>'<div class="ed" style="grid-template-columns:1fr 1fr 96px 130px"><input data-f="mname" data-id="'+m.id+'" value="'+esc(m.name)+'"><input data-f="memail" data-id="'+m.id+'" type="email" inputmode="email" autocapitalize="off" autocomplete="off" placeholder="E-posta" value="'+esc(m.email||'')+'"><input data-f="mpin" data-id="'+m.id+'" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="PIN" value="'+esc(m.pin||'')+'"><button class="ghost" style="min-height:48px;padding:8px 10px" data-a="ndues" data-id="'+m.id+'">'+(m.noDues?'Aidat yok':'Aidat öder')+'</button></div>').join('')+
   '<h2>İçecekler ve fiyatlar</h2>'+S.drinks.map(d=>'<div class="ed"><input data-f="dname" data-id="'+d.id+'" value="'+esc(d.name)+'"><input data-f="dprice" data-id="'+d.id+'" type="number" inputmode="decimal" min="0" step="0.5" value="'+d.price+'"><button data-a="rmd" data-id="'+d.id+'" aria-label="Sil">✕</button></div>').join('')+
   '<div class="bar"><button class="ghost" data-a="addd">+ İçecek ekle</button></div>'+
@@ -287,9 +296,13 @@ document.addEventListener('click',async e=>{
  else if(a==='rprev'){rM--;if(rM<0){rM=11;rY--}render()}
  else if(a==='rnext'){rM++;if(rM>11){rM=0;rY++}render()}
  else if(a==='csv')exportCsv();
+ else if(a==='shop')go('shop');
+ else if(a==='sp'){SP=+b.dataset.v;render()}
+ else if(a==='shopShare')shareDlg();
 });
 document.addEventListener('change',e=>{
  const f=e.target.dataset.f;if(!f)return;const id=e.target.dataset.id,v=e.target.value;
+ if(f==='have'){const n=parseInt(v,10),k=e.target.dataset.v;if(n>0)HAVE[k]=n;else delete HAVE[k];render();return}
  if(f==='mname'){const m=S.members.find(x=>x.id===id);if(m&&v.trim())m.name=v.trim()}
  else if(f==='memail'){const m=S.members.find(x=>x.id===id);if(m){const t=v.trim();if(!t||/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t))m.email=t;else{toast('E-posta adresi geçersiz');e.target.value=m.email||''}}}
  else if(f==='aidat'){const n=parseFloat(String(v).replace(',','.'));if(n>=0)S.aidat=n;render()}
@@ -335,6 +348,30 @@ async function sendMail(id){
  const sub='Hane hesap ekstresi – '+ml,body=L.join(String.fromCharCode(10));
  const u='mailto:'+m.email+'?subject='+encodeURIComponent('Hane hesap ekstresi – '+ml)+'&body='+encodeURIComponent(L.join(String.fromCharCode(10)));
  mailDlg(m,sub,body,u)}
+let SP=14;const HAVE={};
+function shop(){
+ const DAY=86400000,now=Date.now(),cons=S.entries.filter(x=>x.k!=='pay'&&x.t<=now);
+ const first=cons.reduce((m,x)=>Math.min(m,x.t),now),from=Math.max(first,now-28*DAY);
+ const days=Math.max(1,Math.min(28,Math.ceil((now-from)/DAY))),win=cons.filter(x=>x.t>=now-28*DAY);
+ const cnt={};win.forEach(x=>{cnt[x.d]=(cnt[x.d]||0)+1});
+ const rows=S.drinks.filter(d=>cnt[d.name]).map(d=>{const c=cnt[d.name],need=Math.ceil(c/days*SP);return{n:d.name,c:c,need:need,buy:Math.max(0,need-(HAVE[d.name]||0))}}).sort((x,y)=>y.need-x.need);
+ const DN=['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'],wd=[0,0,0,0,0,0,0],hr=new Array(24).fill(0);
+ cons.filter(x=>x.t>=now-56*DAY).forEach(x=>{const t=new Date(x.t);wd[t.getDay()]++;hr[t.getHours()]++});
+ let day='',hour='';
+ if(wd.some(n=>n)){day=DN[wd.indexOf(Math.max.apply(null,wd))];
+  let bh=0,bs=-1;for(let h=0;h<24;h++){const s=hr[h]+hr[(h+1)%24];if(s>bs){bs=s;bh=h}}
+  hour=String(bh).padStart(2,'0')+':00 – '+String((bh+2)%24).padStart(2,'0')+':00'}
+ return{days:days,few:cons.length>0&&days<5,rows:rows,tot:rows.reduce((s,r)=>s+r.buy,0),day:day,hour:hour}}
+function shareDlg(){
+ const P=shop(),pl={7:'1 hafta',14:'2 hafta',30:'1 ay'},NL=String.fromCharCode(10);
+ const body=['Hane alışveriş listesi ('+pl[SP]+' için)',''].concat(P.rows.filter(r=>r.buy).map(r=>'• '+r.n+': '+r.buy+' adet')).join(NL);
+ const d=document.createElement('div');d.className='ov';
+ d.innerHTML='<div class="box" style="width:min(560px,100%)"><h3>Alışveriş listesi</h3><textarea id="mtxt" readonly style="width:100%;height:220px;background:var(--bg);border:2px solid var(--ln);border-radius:12px;padding:12px;font-size:16px;font-family:inherit;color:inherit;-webkit-user-select:text;user-select:text"></textarea><div class="row" style="flex-wrap:wrap"><button class="ghost" data-r="x">Kapat</button><button class="ghost" data-r="c">Kopyala</button>'+(navigator.share?'<button class="main" data-r="s">Paylaş</button>':'')+'</div></div>';
+ document.body.appendChild(d);const ta=d.querySelector('#mtxt');ta.value=body;
+ d.onclick=async e=>{const r=e.target.dataset.r;if(!r)return;
+  if(r==='x')d.remove();
+  else if(r==='s'){try{await navigator.share({title:'Hane alışveriş listesi',text:body})}catch(e){if(!e||e.name!=='AbortError')toast('Paylaşma açılamadı')}}
+  else if(r==='c'){const ok=await copyText(body,ta);ta.value=body;toast(ok?'Liste kopyalandı':'Kopyalanamadı')}}}
 function chipsHtml(){return S.cats.map(x=>'<button class="ghost" style="min-height:44px;padding:8px 14px" data-a="chip" data-v="'+esc(x)+'">'+esc(x)+'</button>').join('')}
 function repo(){
  const s0=new Date(rY,rM,1).getTime(),e0=new Date(rY,rM+1,1).getTime();
