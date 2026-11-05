@@ -60,6 +60,11 @@ input{background:var(--sf);border:2px solid var(--ln);border-radius:12px;padding
 .box .row{display:flex;gap:10px;justify-content:flex-end;margin-top:16px}
 #toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(30px);background:var(--tx);color:var(--bg);padding:14px 22px;border-radius:99px;font-weight:600;font-size:17px;opacity:0;transition:.2s;pointer-events:none;z-index:30}
 #toast.on{opacity:1;transform:translateX(-50%)}
+#undo{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(30px);background:var(--tx);color:var(--bg);padding:8px 8px 8px 22px;border-radius:99px;font-weight:600;font-size:17px;opacity:0;transition:.2s;pointer-events:none;z-index:29;display:flex;align-items:center;gap:14px;white-space:nowrap;max-width:calc(100% - 24px)}
+#undo.on+#toast{bottom:calc(92px + env(safe-area-inset-bottom,0px))}
+#undo.on{opacity:1;transform:translateX(-50%);pointer-events:auto}
+#undo span{overflow:hidden;text-overflow:ellipsis}
+#undo button{background:var(--ac);color:var(--on);border-radius:99px;padding:10px 18px;font-weight:800;min-height:44px;flex:none}
 .cl{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--ln);font-size:18px}
 .cl:last-child{border:0}.cl .d{flex:1;font-weight:600}.cl b{color:var(--ac)}
 .cl button{padding:8px 14px;min-height:44px}
@@ -83,6 +88,7 @@ input{background:var(--sf);border:2px solid var(--ln);border-radius:12px;padding
 </head>
 <body>
 <div id="app"></div>
+<div id="undo"></div>
 <div id="toast"></div>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -143,6 +149,12 @@ function snd2(k){
  else tone(520,0,.05,.15)}
 
 function toast(t){const el=document.getElementById('toast');el.textContent=t;el.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('on'),1600)}
+const UNDO_S=10,SELF_DEL_MS=120000;
+function hideUndo(){const u=document.getElementById('undo');if(u)u.classList.remove('on');clearInterval(hideUndo.t)}
+function showUndo(e){hideUndo();const u=document.getElementById('undo');let n=UNDO_S;
+ const draw=()=>{u.innerHTML='<span>'+esc(e.d)+' hesabına yazıldı</span><button data-a="undo" data-id="'+e.id+'">Geri al ('+n+')</button>'};
+ draw();u.classList.add('on');
+ hideUndo.t=setInterval(()=>{n--;if(n<=0)hideUndo();else draw()},1000)}
 function dlg(o){return new Promise(res=>{
  const d=document.createElement('div');d.className='ov';
  d.innerHTML='<div class="box"><h3>'+esc(o.title)+'</h3>'+(o.msg?'<p>'+esc(o.msg)+'</p>':'')+(o.pin?'<input id="pin" type="password" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="PIN">':'')+(o.num?'<input id="pin" type="number" inputmode="decimal" min="0" step="0.5" placeholder="Tutar (₺)">':'')+'<div class="row"><button class="ghost" data-r="0">Vazgeç</button><button class="main" data-r="1">'+esc(o.ok||'Tamam')+'</button></div></div>';
@@ -254,8 +266,12 @@ document.addEventListener('click',async e=>{
  if(a==='open'){const mm=S.members.find(x=>x.id===id);if(mm&&mm.pin&&!(await memberPin(mm)))return;go('member',id)}
  else if(a==='home')go('home');
  else if(a==='admin'){if(await needPin())go('admin')}
- else if(a==='add'){const d=S.drinks.find(x=>x.id===id);S.entries.push({id:uid(),m:cur,d:d.name,p:d.price,t:Date.now(),paid:false});entSave(S.entries[S.entries.length-1]);render();snd('add');toast(d.name+' hesabına yazıldı')}
- else if(a==='del'){const en=S.entries.find(x=>x.id===id);if(en&&en.k==='pay'&&!(await needPin()))return;if(await dlg({title:'Bu kaydı sil?',ok:'Sil'})){entDel(id);render()}}
+ else if(a==='add'){const d=S.drinks.find(x=>x.id===id);S.entries.push({id:uid(),m:cur,d:d.name,p:d.price,t:Date.now(),paid:false});const ne=S.entries[S.entries.length-1];entSave(ne);render();snd('add');showUndo(ne)}
+ else if(a==='undo'){hideUndo();if(S.entries.some(x=>x.id===id&&!x.paid)){entDel(id);render();toast('Geri alındı')}}
+ else if(a==='del'){const en=S.entries.find(x=>x.id===id);if(!en)return;const late=en.k==='pay'||Date.now()-en.t>SELF_DEL_MS;
+  if(late){if(!(await needPin()))return}
+  else if(!(await dlg({title:'Bu kaydı sil?',msg:'Yazıldıktan sonraki 2 dakika içinde kendin silebilirsin. Sonrasında yönetici PIN’i gerekir.',ok:'Sil'})))return;
+  entDel(id);render();toast('Kayıt silindi')}
  else if(a==='settle'||a==='settleA'){
   if(!(await needPin()))return;
   const now=Date.now(),b=bal(id),es=open_(id);
