@@ -65,6 +65,11 @@ input{background:var(--sf);border:2px solid var(--ln);border-radius:12px;padding
 #toast.on{opacity:1;transform:translateX(-50%)}
 #undo{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(30px);background:var(--tx);color:var(--bg);padding:8px 8px 8px 22px;border-radius:99px;font-weight:600;font-size:17px;opacity:0;transition:.2s;pointer-events:none;z-index:29;display:flex;align-items:center;gap:14px;white-space:nowrap;max-width:calc(100% - 24px)}
 #undo.on+#toast{bottom:calc(92px + env(safe-area-inset-bottom,0px))}
+#net{position:fixed;left:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:7px;background:var(--card);border:1px solid var(--ln);border-radius:99px;padding:6px 12px 6px 10px;font-size:13px;font-weight:600;color:var(--mu);z-index:28;transition:opacity .2s;cursor:pointer}
+#net i{width:11px;height:11px;border-radius:50%;background:#9aa;flex:none}
+#net.ok i{background:#2e9d5b}#net.wait i{background:#e0a020;animation:pulse 1.2s infinite}#net.bad i{background:#d33}#net.bad{color:#b22}
+@keyframes pulse{50%{opacity:.35}}
+#undo.on~#net{opacity:0;pointer-events:none}
 #undo.on{opacity:1;transform:translateX(-50%);pointer-events:auto}
 #undo span{overflow:hidden;text-overflow:ellipsis}
 #undo button{background:var(--ac);color:var(--on);border-radius:99px;padding:10px 18px;font-weight:800;min-height:44px;flex:none}
@@ -93,6 +98,7 @@ input{background:var(--sf);border:2px solid var(--ln);border-radius:12px;padding
 <div id="app"></div>
 <div id="undo"></div>
 <div id="toast"></div>
+<div id="net" class="wait" data-a="net"><i></i><span>Bağlanıyor…</span></div>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script>
@@ -112,11 +118,11 @@ if(!S.cash)S.cash=[];if(typeof S.open!=='number')S.open=0;
 if(!Array.isArray(S.cats))S.cats=CATS0.slice();
 let DB=null,rY=new Date().getFullYear(),rM=new Date().getMonth(),dY=new Date().getFullYear(),cY=new Date().getFullYear(),cM=new Date().getMonth();
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
-function cfgSave(){save();if(DB)DB.doc('cfg/main').set({pin:S.pin,members:S.members,drinks:S.drinks,aidat:S.aidat,dues:S.dues,open:S.open,cats:S.cats}).catch(()=>{})}
-function entSave(e){save();if(DB)DB.collection('entries').doc(e.id).set(e).catch(()=>{})}
-function entDel(id){S.entries=S.entries.filter(x=>x.id!==id);save();if(DB)DB.collection('entries').doc(id).delete().catch(()=>{})}
-function cashSave(e){save();if(DB)DB.collection('cash').doc(e.id).set(e).catch(()=>{})}
-function cashDel(id){S.cash=S.cash.filter(x=>x.id!==id);save();if(DB)DB.collection('cash').doc(id).delete().catch(()=>{})}
+function cfgSave(){save();if(DB)DB.doc('cfg/main').set({pin:S.pin,members:S.members,drinks:S.drinks,aidat:S.aidat,dues:S.dues,open:S.open,cats:S.cats}).catch(netErr)}
+function entSave(e){save();if(DB)DB.collection('entries').doc(e.id).set(e).catch(netErr)}
+function entDel(id){S.entries=S.entries.filter(x=>x.id!==id);save();if(DB)DB.collection('entries').doc(id).delete().catch(netErr)}
+function cashSave(e){save();if(DB)DB.collection('cash').doc(e.id).set(e).catch(netErr)}
+function cashDel(id){S.cash=S.cash.filter(x=>x.id!==id);save();if(DB)DB.collection('cash').doc(id).delete().catch(netErr)}
 const typing=()=>document.activeElement&&document.activeElement.tagName==='INPUT';
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const money=n=>(Math.round(n*100)/100).toLocaleString('tr-TR')+' ₺';
@@ -288,7 +294,7 @@ document.addEventListener('click',async e=>{
   const pe={id:uid(),m:id,d:'Ödeme',p:-n,t:Date.now(),paid:false,k:'pay'};S.entries.push(pe);entSave(pe);render();snd('ok');toast(money(n)+' ödeme alındı')}
  else if(a==='addd'){S.drinks.push({id:uid(),name:'Yeni içecek',price:0});cfgSave();render()}
  else if(a==='rmd'){if(await dlg({title:'İçecek silinsin mi?',msg:'Geçmiş kayıtlar etkilenmez.',ok:'Sil'})){S.drinks=S.drinks.filter(x=>x.id!==id);cfgSave();render()}}
- else if(a==='wipe'){if(await dlg({title:'Tüm veriler silinsin mi?',msg:'Üyeler, fiyatlar ve tüm hesap kayıtları sıfırlanır.',ok:'Evet, sıfırla'})){const old=S.entries,oldc=S.cash||[];S=defaults();S.entries=[];if(DB){old.forEach(x=>DB.collection('entries').doc(x.id).delete().catch(()=>{}));oldc.forEach(x=>DB.collection('cash').doc(x.id).delete().catch(()=>{}))}cfgSave();go('home')}}
+ else if(a==='wipe'){if(await dlg({title:'Tüm veriler silinsin mi?',msg:'Üyeler, fiyatlar ve tüm hesap kayıtları sıfırlanır.',ok:'Evet, sıfırla'})){const old=S.entries,oldc=S.cash||[];S=defaults();S.entries=[];if(DB){old.forEach(x=>DB.collection('entries').doc(x.id).delete().catch(netErr));oldc.forEach(x=>DB.collection('cash').doc(x.id).delete().catch(netErr))}cfgSave();go('home')}}
  else if(a==='dues')go('dues');
  else if(a==='dprev'){dY--;render()}
  else if(a==='dnext'){dY++;render()}
@@ -317,6 +323,7 @@ document.addEventListener('click',async e=>{
  else if(a==='rnext'){rM++;if(rM>11){rM=0;rY++}render()}
  else if(a==='csv')exportCsv();
  else if(a==='shop')go('shop');
+ else if(a==='net')toast(netState()[2]);
  else if(a==='reload'){toast('Yenileniyor…');setTimeout(()=>{const u=location.href.split('#')[0].replace(/[?&]r=\d+/,'');location.replace(u+(u.indexOf('?')>-1?'&':'?')+'r='+Date.now())},300)}
  else if(a==='bk'){if(await needPin())backup(false)}
  else if(a==='rs'){if(await needPin()){const f=document.getElementById('rfile');if(f){f.value='';f.click()}}}
@@ -448,8 +455,19 @@ async function exportCsv(){
  catch(e){try{window.open('data:text/csv;charset=utf-8,'+encodeURIComponent(txt),'_blank')}catch(e2){toast('Dosya kaydedilmedi')}}}
 const FBCFG={apiKey:"AIzaSyAjScXOm6zLI4tHQO7lCXw94uAiMzTc_Qo",authDomain:"hane-lokal-9da16.firebaseapp.com",projectId:"hane-lokal-9da16",storageBucket:"hane-lokal-9da16.firebasestorage.app",messagingSenderId:"959506159184",appId:"1:959506159184:web:2ad9f6fc04ff801895e355"};
 let errShown=false;
-function dbErr(e){if(errShown)return;errShown=true;setTimeout(()=>{errShown=false},15000);
+function dbErr(e){netErr(e);if(errShown)return;errShown=true;setTimeout(()=>{errShown=false},15000);
  toast(e&&e.code==='permission-denied'?'Sunucu izin vermedi (Firestore kuralları)':'Sunucuya bağlanılamadı, yeniden deneniyor')}
+const NET={pend:false,cache:true,err:0,code:''};
+function netErr(e){NET.err=Date.now();NET.code=e&&e.code||'';netDraw();setTimeout(netDraw,15500)}
+function netState(){
+ if(!navigator.onLine)return['bad','İnternet yok','Cihazın internet bağlantısı yok. Yazılanlar cihazda bekliyor, bağlantı gelince sunucuya gidecek. Sayfayı yenileme.'];
+ if(Date.now()-NET.err<15000)return['bad',NET.code==='permission-denied'?'Sunucu izin vermedi':'Sunucu hatası','Sunucuya yazarken hata oldu'+(NET.code?' ('+NET.code+')':'')+'. Tekrar denenecek.'];
+ if(!DB)return['wait','Bağlanıyor…','Sunucuya bağlanılıyor.'];
+ if(NET.pend)return['wait','Kaydediliyor…','Son yazılanlar sunucuya gönderiliyor. Sayfayı yenileme.'];
+ if(NET.cache)return['wait','Bağlanıyor…','İnternet var ama sunucuyla bağlantı henüz kurulmadı.'];
+ return['ok','Bağlı','Her şey yolunda: kayıtlar sunucuya gidiyor ve diğer cihazlarla eşleşiyor.']}
+function netDraw(){const el=document.getElementById('net');if(!el)return;const s=netState();el.className=s[0];el.querySelector('span').textContent=s[1]}
+window.addEventListener('online',netDraw);window.addEventListener('offline',netDraw);setInterval(netDraw,5000);
 async function initDb(){try{
  if(!window.firebase)throw new Error('sdk');
  if(!firebase.apps.length){firebase.initializeApp(FBCFG);
@@ -459,6 +477,7 @@ async function initDb(){try{
  DB=c;
  cd.onSnapshot(sn=>{if(!sn.exists)return;const d=JSON.parse(JSON.stringify(sn.data()));S.pin=d.pin;S.members=d.members;S.drinks=d.drinks;S.aidat=d.aidat||0;S.dues=d.dues||{};S.open=d.open||0;S.cats=Array.isArray(d.cats)?d.cats:CATS0.slice();save();if(!typing())render()},dbErr);
  DB.collection('entries').onSnapshot(q=>{S.entries=q.docs.map(d=>Object.assign({},d.data(),{id:d.id}));save();if(!typing())render()},dbErr);
+ const mt={};['cfg','entries','cash'].forEach(k=>{(k==='cfg'?cd:DB.collection(k)).onSnapshot({includeMetadataChanges:true},s=>{mt[k]=s.metadata;NET.pend=Object.keys(mt).some(x=>mt[x].hasPendingWrites);NET.cache=Object.keys(mt).some(x=>mt[x].fromCache);netDraw()},()=>{})});
  DB.collection('cash').onSnapshot(q=>{S.cash=q.docs.map(d=>Object.assign({},d.data(),{id:d.id}));save();if(!typing())render()},dbErr);
  render();
 }catch(e){dbErr(e);setTimeout(initDb,10000)}}
