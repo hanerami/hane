@@ -55,6 +55,9 @@ h2{font-size:20px;margin:28px 0 10px}
 .bar{display:flex;gap:12px;flex-wrap:wrap;margin-top:22px}
 .ed{display:grid;grid-template-columns:1fr 120px 52px;gap:8px;margin-bottom:8px}
 .ed.m{grid-template-columns:1fr}
+.ed.dsort{grid-template-columns:52px 1fr 120px 52px}
+.ed .hd{display:flex;align-items:center;justify-content:center;border:2px solid var(--ln);border-radius:12px;color:var(--mu);font-size:24px;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
+.ed.drag{opacity:.85;transform:scale(1.02);box-shadow:0 8px 24px rgba(0,0,0,.18);border-radius:12px;background:var(--card);position:relative;z-index:5}
 input{background:var(--sf);border:2px solid var(--ln);border-radius:12px;padding:12px 14px;font-size:18px;min-height:48px;width:100%;-webkit-user-select:text;user-select:text}
 .ed button{background:transparent;border:2px solid var(--ln);border-radius:12px;color:var(--bad);font-size:20px}
 .ov{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);display:grid;place-items:center;z-index:20;padding:20px}
@@ -280,7 +283,7 @@ function render(){
   a.innerHTML='<header><div><button class="ghost" data-a="home">‹ Çıkış</button><h1 style="margin-top:14px">Yönetim</h1></div><div class="bal"><span>Tahsil edilen toplam</span><b>'+money(paid)+'</b></div></header>'+
   '<div class="bar" style="margin:0"><button class="main" data-a="report">Aylık rapor ve Excel</button><button class="main" data-a="dues">Aidat takibi</button><button class="main" data-a="cash">Masraf ve kasa</button><button class="main" data-a="shop">Alışveriş listesi</button><button class="main" data-a="rcpts">Makbuzlar</button></div><h2>Açık hesaplar</h2><div class="log">'+S.members.map(m=>{const b=bal(m.id);return '<div class="cl"><span class="d">'+esc(m.name)+'</span><b>'+money(b)+'</b>'+(b?'<button class="main" data-a="settleA" data-id="'+m.id+'">Hesabı kapat</button>':'')+'</div>'}).join('')+'</div>'+
   '<h2>Üyeler</h2><div class="sub" style="margin:-6px 0 10px">Ad, e-posta (makbuz ve ekstre için) ve üye PIN’i (4 rakam, boş bırakırsan PIN sorulmaz)</div>'+S.members.map(m=>'<div class="ed" style="grid-template-columns:1fr 1fr 96px 130px"><input data-f="mname" data-id="'+m.id+'" value="'+esc(m.name)+'"><input data-f="memail" data-id="'+m.id+'" type="email" inputmode="email" autocapitalize="off" autocomplete="off" placeholder="E-posta" value="'+esc(m.email||'')+'"><input data-f="mpin" data-id="'+m.id+'" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="PIN" value="'+esc(m.pin||'')+'"><button class="ghost" style="min-height:48px;padding:8px 10px" data-a="ndues" data-id="'+m.id+'">'+(m.noDues?'Aidat yok':'Aidat öder')+'</button></div>').join('')+
-  '<h2>İçecekler ve fiyatlar</h2>'+S.drinks.map(d=>'<div class="ed"><input data-f="dname" data-id="'+d.id+'" value="'+esc(d.name)+'"><input data-f="dprice" data-id="'+d.id+'" type="number" inputmode="decimal" min="0" step="0.5" value="'+d.price+'"><button data-a="rmd" data-id="'+d.id+'" aria-label="Sil">✕</button></div>').join('')+
+  '<h2>İçecekler ve fiyatlar</h2><div class="sub" style="margin:-6px 0 10px">Sırayı değiştirmek için ≡ işaretinden tutup sürükle. Üye ekranındaki kartlar bu sırayla dizilir.</div><div id="dlist">'+S.drinks.map((d,i)=>'<div class="ed dsort" data-id="'+d.id+'"><span class="hd" aria-label="Sürükle">≡</span><input data-f="dname" data-id="'+d.id+'" value="'+esc(d.name)+'"><input data-f="dprice" data-id="'+d.id+'" type="number" inputmode="decimal" min="0" step="0.5" value="'+d.price+'"><button data-a="rmd" data-id="'+d.id+'" aria-label="Sil">✕</button></div>').join('')+'</div>'+
   '<div class="bar"><button class="ghost" data-a="addd">+ İçecek ekle</button></div>'+
   '<h2>Güvenlik</h2><div class="ed m"><input data-f="pin" type="password" inputmode="numeric" maxlength="8" placeholder="Yeni PIN (şu an: '+'•'.repeat(S.pin.length)+')"></div>'+
   '<div class="bar"><button class="ghost" data-a="snd">Tuş sesi: '+(SND?'açık':'kapalı')+'</button></div><h2>Yedek</h2><div class="sub" style="margin:-6px 0 10px">Tüm veriler (üyeler, fiyatlar, hesaplar, kasa, aidat) tek dosyada. Dosyayı Dosyalar’a, Drive’a ya da maile koy.</div><div class="bar" style="margin-top:0"><button class="main" data-a="bk">Yedek al</button><button class="ghost" data-a="rs">Yedekten geri yükle</button></div><input id="rfile" type="file" accept=".json,application/json" style="display:none">'+
@@ -527,6 +530,18 @@ function rcptDlg(pe){
    else{const u=URL.createObjectURL(b);window.open(u,'_blank')||toast('PDF açılamadı');setTimeout(()=>URL.revokeObjectURL(u),60000)}}
   else if(r==='m'){d.remove();const NL=String.fromCharCode(10),sub='Hane makbuzu '+pe.no,body=['Merhaba '+m.name+',','',pe.no+' numaralı makbuzunuz:','Tarih: '+when(pe.t),'Alınan tutar: '+money(-pe.p),(typeof pe.rest==='number'?'Kalan bakiye: '+money(pe.rest):''),'','PDF makbuz ekte. (Mail uygulamasında ataç ile Dosyalar’dan ekleyebilirsiniz.)','','Hane'].join(NL);
    mailDlg(m,sub,body,'mailto:'+m.email+'?subject='+encodeURIComponent(sub)+'&body='+encodeURIComponent(body))}}}
+(function(){let row=null,list=null,moved=false;
+ document.addEventListener('pointerdown',e=>{const hd=e.target.closest&&e.target.closest('#dlist .hd');if(!hd)return;e.preventDefault();row=hd.parentNode;list=row.parentNode;moved=false;row.classList.add('drag');try{hd.setPointerCapture(e.pointerId)}catch(x){}});
+ document.addEventListener('pointermove',e=>{if(!row)return;e.preventDefault();
+  const sib=Array.from(list.children).filter(x=>x!==row);
+  for(const s of sib){const r=s.getBoundingClientRect();if(e.clientY>r.top&&e.clientY<r.bottom){const before=e.clientY<r.top+r.height/2;
+    if(before&&s.previousSibling!==row){list.insertBefore(row,s);moved=true}else if(!before&&s.nextSibling!==row){list.insertBefore(row,s.nextSibling);moved=true}break}}
+  const L=list.getBoundingClientRect();if(e.clientY<80)window.scrollBy(0,-12);else if(e.clientY>window.innerHeight-80)window.scrollBy(0,12)},{passive:false});
+ const up=()=>{if(!row)return;row.classList.remove('drag');
+  if(moved){const ids=Array.from(list.children).map(x=>x.dataset.id),map={};S.drinks.forEach(d=>{map[d.id]=d});
+   const nd=ids.map(id=>map[id]).filter(Boolean);S.drinks.forEach(d=>{if(nd.indexOf(d)<0)nd.push(d)});S.drinks=nd;cfgSave();snd('ok');toast('Sıra kaydedildi')}
+  row=null;list=null};
+ document.addEventListener('pointerup',up);document.addEventListener('pointercancel',up)})();
 function chipsHtml(){return S.cats.map(x=>'<button class="ghost" style="min-height:44px;padding:8px 14px" data-a="chip" data-v="'+esc(x)+'">'+esc(x)+'</button>').join('')}
 function repo(){
  const s0=new Date(rY,rM,1).getTime(),e0=new Date(rY,rM+1,1).getTime();
