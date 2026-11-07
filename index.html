@@ -69,6 +69,20 @@ input{background:var(--sf);border:2px solid var(--ln);border-radius:12px;padding
 #net i{width:11px;height:11px;border-radius:50%;background:#9aa;flex:none}
 #net.ok i{background:#2e9d5b}#net.wait i{background:#e0a020;animation:pulse 1.2s infinite}#net.bad i{background:#d33}#net.bad{color:#b22}
 @keyframes pulse{50%{opacity:.35}}
+#beer{position:fixed;inset:0;z-index:60;overflow:hidden;cursor:pointer;pointer-events:auto}
+#beer .liq{position:absolute;left:0;right:0;bottom:0;height:100%;background:linear-gradient(180deg,#f7c548 0%,#eaa323 45%,#c9780f 100%);transform:translateY(100%);transition:transform 1s cubic-bezier(.3,.7,.3,1)}
+#beer.in .liq{transform:translateY(22%)}
+#beer .foam{position:absolute;left:-5%;right:-5%;top:-70px;height:110px;background:#fffaf0;border-radius:0 0 40% 40%/0 0 30px 30px}
+#beer .foam:before{content:'';position:absolute;left:0;right:0;top:-38px;height:80px;background:radial-gradient(circle at 20px 40px,#fffaf0 38px,transparent 39px) 0 0/76px 80px repeat-x}
+#beer .bb{position:absolute;bottom:-20px;border-radius:50%;background:rgba(255,255,255,.55);animation:bub linear infinite}
+@keyframes bub{to{transform:translateY(-110vh)}}
+#beer .msg{position:absolute;left:0;right:0;top:40%;text-align:center;color:#5a3500;opacity:0;transform:scale(.7);transition:opacity .4s .7s,transform .5s .7s cubic-bezier(.3,1.6,.5,1)}
+#beer.in .msg{opacity:1;transform:none}
+#beer .msg b{display:block;font-size:min(16vw,110px);font-weight:900;color:#fff;text-shadow:0 4px 0 rgba(120,60,0,.35)}
+#beer .msg span{display:block;font-size:min(6vw,34px);font-weight:800;margin-top:6px}
+#beer .msg i{display:block;font-style:normal;font-size:min(4.5vw,24px);font-weight:600;margin-top:8px;opacity:.85}
+#beer.out{transition:opacity .9s;opacity:0}
+#beer.out .liq{transform:translateY(100%);transition:transform .9s ease-in}
 #undo.on~#net{opacity:0;pointer-events:none}
 #undo.on{opacity:1;transform:translateX(-50%);pointer-events:auto}
 #undo span{overflow:hidden;text-overflow:ellipsis}
@@ -290,7 +304,7 @@ document.addEventListener('click',async e=>{
   if(!(await needPin()))return;
   const now=Date.now(),b=bal(id),es=open_(id);
   let pe=null;if(b>0){pe={id:uid(),m:id,d:'Ödeme',p:-b,t:now,paid:true,paidAt:now,k:'pay',no:nextNo(now),kind:'tam',rest:0};S.entries.push(pe);entSave(pe)}
-  es.forEach(x=>{x.paid=true;x.paidAt=now;entSave(x)});render();snd('ok');if(pe)rcptDone(pe);else toast('Hesap kapatıldı')}
+  es.forEach(x=>{x.paid=true;x.paidAt=now;entSave(x)});render();snd('ok');if(pe){await beerParty(mName(id),-pe.p);rcptDone(pe)}else toast('Hesap kapatıldı')}
  else if(a==='part'){
   if(!(await needPin()))return;
   const v=await dlg({title:'Kısmi ödeme',msg:'Alınan tutarı gir.',num:true,ok:'Kaydet'});if(v===false)return;
@@ -491,13 +505,22 @@ function pdfFromJpeg(b64,w,h){
  out+='trailer\n<< /Size '+(objs.length+1)+' /Root 1 0 R >>\nstartxref\n'+xr+'\n%%EOF';
  return new Blob([enc(out)],{type:'application/pdf'})}
 function rcptPdf(pe){const c=rcptCanvas(pe),u=c.toDataURL('image/jpeg',0.9);return pdfFromJpeg(u.slice(u.indexOf(',')+1),c.width,c.height)}
+function beerParty(name,amount){return new Promise(res=>{
+ const d=document.createElement('div');d.id='beer';
+ let bb='';for(let i=0;i<26;i++){const s=6+Math.random()*16;bb+='<i class="bb" style="left:'+(Math.random()*100)+'%;width:'+s+'px;height:'+s+'px;animation-duration:'+(1.6+Math.random()*2.2)+'s;animation-delay:'+(Math.random()*1.5)+'s"></i>'}
+ d.innerHTML='<div class="liq"><div class="foam"></div>'+bb+'</div><div class="msg"><b>Şerefe! 🍻</b><span>'+esc(name)+', hesabın kapandı</span>'+(amount?'<i>'+money(amount)+' ödendi · teşekkürler</i>':'')+'</div>';
+ document.body.appendChild(d);let done=false;
+ const end=()=>{if(done)return;done=true;d.classList.add('out');setTimeout(()=>{d.remove();res()},900)};
+ requestAnimationFrame(()=>requestAnimationFrame(()=>d.classList.add('in')));
+ d.onclick=end;setTimeout(end,2600)})}
 function rcptDlg(pe){
  const c=rcptCanvas(pe),name='Makbuz-'+pe.no+'.pdf',m=S.members.find(x=>x.id===pe.m);
  const d=document.createElement('div');d.className='ov';
- d.innerHTML='<div class="box" style="width:min(560px,100%);max-height:92vh;overflow:auto"><h3>'+pe.no+'</h3><img alt="Makbuz" style="width:100%;border:1px solid var(--ln);border-radius:10px;margin:6px 0 4px"><div class="row" style="flex-wrap:wrap"><button class="ghost" data-r="x">Kapat</button><button class="ghost" data-r="d">PDF indir</button>'+(m&&m.email?'<button class="ghost" data-r="m">Mail metni</button>':'')+'<button class="main" data-r="s">PDF paylaş</button></div><div class="sub" style="margin-top:10px">“PDF paylaş” ile WhatsApp, Mail ya da Dosyalar’a gönderebilirsin.</div></div>';
+ d.innerHTML='<div class="box" style="width:min(560px,100%);max-height:92vh;overflow:auto"><h3>'+pe.no+'</h3><img alt="Makbuz" style="width:100%;border:1px solid var(--ln);border-radius:10px;margin:6px 0 4px"><div class="row" style="flex-wrap:wrap"><button class="ghost" data-r="x">Kapat</button><button class="ghost" data-r="d">PDF indir</button>'+(m&&m.email?'<button class="ghost" data-r="m">Mail metni</button>':'')+'<button class="main" data-r="s">PDF paylaş</button>'+(pe.kind==='tam'?'<button class="ghost" data-r="b">🍻 Kutla</button>':'')+'</div><div class="sub" style="margin-top:10px">“PDF paylaş” ile WhatsApp, Mail ya da Dosyalar’a gönderebilirsin.</div></div>';
  d.querySelector('img').src=c.toDataURL('image/jpeg',0.85);document.body.appendChild(d);
  d.onclick=async e=>{const r=e.target.dataset.r;if(!r)return;
   if(r==='x')d.remove();
+  else if(r==='b'){d.style.visibility='hidden';await beerParty(mName(pe.m),-pe.p);d.style.visibility=''}
   else if(r==='d'){const b=rcptPdf(pe),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{a.remove();URL.revokeObjectURL(u)},4000)}
   else if(r==='s'){const b=rcptPdf(pe);let f=null;try{f=new File([b],name,{type:'application/pdf'})}catch(x){}
    if(f&&navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f],title:pe.no})}catch(x){if(!x||x.name!=='AbortError')toast('Paylaşma açılamadı')}}
