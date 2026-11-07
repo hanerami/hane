@@ -166,7 +166,7 @@ function showUndo(e){hideUndo();const u=document.getElementById('undo');let n=UN
  hideUndo.t=setInterval(()=>{n--;if(n<=0)hideUndo();else draw()},1000)}
 function dlg(o){return new Promise(res=>{
  const d=document.createElement('div');d.className='ov';
- d.innerHTML='<div class="box"><h3>'+esc(o.title)+'</h3>'+(o.msg?'<p>'+esc(o.msg)+'</p>':'')+(o.pin?'<input id="pin" type="password" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="PIN">':'')+(o.num?'<input id="pin" type="number" inputmode="decimal" min="0" step="0.5" placeholder="Tutar (₺)">':'')+'<div class="row"><button class="ghost" data-r="0">Vazgeç</button><button class="main" data-r="1">'+esc(o.ok||'Tamam')+'</button></div></div>';
+ d.innerHTML='<div class="box"><h3>'+esc(o.title)+'</h3>'+(o.msg?'<p>'+esc(o.msg)+'</p>':'')+(o.pin?'<input id="pin" type="password" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="PIN">':'')+(o.num?'<input id="pin" type="number" inputmode="decimal" min="0" step="0.5" placeholder="Tutar (₺)">':'')+'<div class="row"><button class="ghost" data-r="0">'+esc(o.cancel||'Vazgeç')+'</button><button class="main" data-r="1">'+esc(o.ok||'Tamam')+'</button></div></div>';
  document.body.appendChild(d);const p=d.querySelector('#pin');if(p)p.focus();
  if(p&&o.pin)p.addEventListener('input',()=>{if(p.value&&(o.accept||[S.pin]).indexOf(p.value)>-1){d.remove();res(p.value)}});
  d.onclick=e=>{const r=e.target.dataset.r;if(r===undefined)return;const v=p?p.value:true;d.remove();res(r==='1'?v:false)};
@@ -196,8 +196,8 @@ function render(){
   const m=S.members.find(x=>x.id===cur),es=open_(cur).sort((x,y)=>y.t-x.t);
   a.innerHTML='<header><div><button class="ghost" data-a="home">‹ Geri</button><h1 style="margin-top:14px">'+esc(m.name)+'</h1></div><div class="bal"><span>Hesabın</span><b>'+money(bal(cur))+'</b></div></header>'+
   '<div class="grid">'+S.drinks.map(d=>{const c=es.filter(e=>e.d===d.name).length;const im=dImg(d.name);return '<button class="drink'+(im?' pic':'')+(c?' hc':'')+'" data-a="add" data-id="'+d.id+'">'+(im?'<img class="i" src="'+im+'" alt="">':'')+(c?'<span class="c">'+c+'</span>':'')+'<span class="n">'+esc(d.name)+'</span><span class="p">'+money(d.price)+'</span></button>'}).join('')+'</div>'+
-  '<h2>Hesabındakiler</h2><div class="log">'+(es.length?es.map(e=>'<div'+(e.k==='pay'?' class="pay"':'')+'><span class="t">'+when(e.t)+'</span><span class="d">'+esc(e.d)+'</span><b>'+money(e.p)+'</b><button class="x" data-a="del" data-id="'+e.id+'" aria-label="Sil">✕</button></div>').join(''):'<div class="empty">Henüz bir şey yazılmadı.</div>')+'</div>'+
-  (es.length?'<div class="bar"><button class="ghost" data-a="part" data-id="'+cur+'">Kısmi ödeme al</button><button class="main" data-a="settle" data-id="'+cur+'">Ödeme alındı, hesabı kapat</button></div>':'')+'<div class="bar"><button class="ghost" data-a="mail" data-id="'+cur+'">Makbuz ve ekstreyi mail ile gönder</button></div>';
+  '<h2>Hesabındakiler</h2><div class="log">'+(es.length?es.map(e=>'<div'+(e.k==='pay'?' class="pay"':'')+'><span class="t">'+when(e.t)+'</span><span class="d">'+esc(e.d)+(e.no?' <span style="color:var(--mu);font-size:14px">'+e.no+'</span>':'')+'</span><b>'+money(e.p)+'</b>'+(e.no?'<button class="x" data-a="rcpt" data-id="'+e.id+'" aria-label="Makbuz">🧾</button>':'')+'<button class="x" data-a="del" data-id="'+e.id+'" aria-label="Sil">✕</button></div>').join(''):'<div class="empty">Henüz bir şey yazılmadı.</div>')+'</div>'+
+  (es.length?'<div class="bar"><button class="ghost" data-a="part" data-id="'+cur+'">Kısmi ödeme al</button><button class="main" data-a="settle" data-id="'+cur+'">Ödeme alındı, hesabı kapat</button></div>':'')+'<div class="bar"><button class="ghost" data-a="mail" data-id="'+cur+'">Makbuz ve ekstreyi mail ile gönder</button></div>'+rcptList(S.entries.filter(x=>x.m===cur&&x.no).sort((x,y)=>y.t-x.t).slice(0,5),'Son makbuzlar',false);
  }else if(view==='cash'){
   const inc=-S.entries.filter(e=>e.k==='pay').reduce((s,e)=>s+e.p,0),aid=Object.values(S.dues).reduce((s,r)=>s+r.a,0),
    oth=S.cash.filter(x=>x.k==='in').reduce((s,x)=>s+x.a,0),exp=S.cash.filter(x=>x.k==='out').reduce((s,x)=>s+x.a,0),total=S.open+inc+aid+oth-exp;
@@ -235,6 +235,10 @@ function render(){
   (S.aidat>0?'':'<div class="sub" style="color:var(--bad);margin-bottom:10px">Önce aylık aidat tutarını yaz.</div>')+
   '<div class="dt"><div class="dr dh"><span class="dn" style="font-size:22px;font-weight:800;color:var(--ac)">'+dY+'</span>'+MN.map(x=>'<span class="dc dl">'+x+'</span>').join('')+'<span class="dm">Ödenen</span><span class="dm">Eksik</span></div>'+rows+'</div>'+
   '<div class="sub" style="margin-top:12px">Kutuya dokun: ödendi ya da ödenmedi. Kırmızı çerçeve, geçmiş ayda ödenmemiş aidat demek. Ödenmemiş toplam: <b>'+money(miss)+'</b></div>';
+ }else if(view==='rcpts'){
+  const rs=S.entries.filter(x=>x.no).sort((x,y)=>y.t-x.t),y0=new Date().getFullYear(),ty=rs.filter(x=>new Date(x.t).getFullYear()===y0);
+  a.innerHTML='<header><div><button class="ghost" data-a="admin">‹ Yönetim</button><h1 style="margin-top:14px">Makbuzlar</h1><div class="sub">Her ödemeye sıra numaralı makbuz kesilir.</div></div><div class="bal"><span>'+y0+' tahsilatı</span><b>'+money(-ty.reduce((s,x)=>s+x.p,0))+'</b></div></header>'+
+  (rs.length?rcptList(rs,'',true):'<div class="empty">Henüz makbuz yok. Bir ödeme alınca burada görünür.</div>');
  }else if(view==='shop'){
   const P=shop(),pl={7:'1 hafta',14:'2 hafta',30:'1 ay'};
   a.innerHTML='<header><div><button class="ghost" data-a="admin">‹ Yönetim</button><h1 style="margin-top:14px">Alışveriş listesi</h1><div class="sub">Son '+P.days+' günün tüketimine göre tahmin</div></div><div class="bal"><span>'+pl[SP]+' için alınacak</span><b>'+P.tot+' adet</b></div></header>'+
@@ -260,7 +264,7 @@ function render(){
  }else{
   const paid=-S.entries.filter(e=>e.k==='pay').reduce((s,e)=>s+e.p,0);
   a.innerHTML='<header><div><button class="ghost" data-a="home">‹ Çıkış</button><h1 style="margin-top:14px">Yönetim</h1></div><div class="bal"><span>Tahsil edilen toplam</span><b>'+money(paid)+'</b></div></header>'+
-  '<div class="bar" style="margin:0"><button class="main" data-a="report">Aylık rapor ve Excel</button><button class="main" data-a="dues">Aidat takibi</button><button class="main" data-a="cash">Masraf ve kasa</button><button class="main" data-a="shop">Alışveriş listesi</button></div><h2>Açık hesaplar</h2><div class="log">'+S.members.map(m=>{const b=bal(m.id);return '<div class="cl"><span class="d">'+esc(m.name)+'</span><b>'+money(b)+'</b>'+(b?'<button class="main" data-a="settleA" data-id="'+m.id+'">Hesabı kapat</button>':'')+'</div>'}).join('')+'</div>'+
+  '<div class="bar" style="margin:0"><button class="main" data-a="report">Aylık rapor ve Excel</button><button class="main" data-a="dues">Aidat takibi</button><button class="main" data-a="cash">Masraf ve kasa</button><button class="main" data-a="shop">Alışveriş listesi</button><button class="main" data-a="rcpts">Makbuzlar</button></div><h2>Açık hesaplar</h2><div class="log">'+S.members.map(m=>{const b=bal(m.id);return '<div class="cl"><span class="d">'+esc(m.name)+'</span><b>'+money(b)+'</b>'+(b?'<button class="main" data-a="settleA" data-id="'+m.id+'">Hesabı kapat</button>':'')+'</div>'}).join('')+'</div>'+
   '<h2>Üyeler</h2><div class="sub" style="margin:-6px 0 10px">Ad, e-posta (makbuz ve ekstre için) ve üye PIN’i (4 rakam, boş bırakırsan PIN sorulmaz)</div>'+S.members.map(m=>'<div class="ed" style="grid-template-columns:1fr 1fr 96px 130px"><input data-f="mname" data-id="'+m.id+'" value="'+esc(m.name)+'"><input data-f="memail" data-id="'+m.id+'" type="email" inputmode="email" autocapitalize="off" autocomplete="off" placeholder="E-posta" value="'+esc(m.email||'')+'"><input data-f="mpin" data-id="'+m.id+'" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="PIN" value="'+esc(m.pin||'')+'"><button class="ghost" style="min-height:48px;padding:8px 10px" data-a="ndues" data-id="'+m.id+'">'+(m.noDues?'Aidat yok':'Aidat öder')+'</button></div>').join('')+
   '<h2>İçecekler ve fiyatlar</h2>'+S.drinks.map(d=>'<div class="ed"><input data-f="dname" data-id="'+d.id+'" value="'+esc(d.name)+'"><input data-f="dprice" data-id="'+d.id+'" type="number" inputmode="decimal" min="0" step="0.5" value="'+d.price+'"><button data-a="rmd" data-id="'+d.id+'" aria-label="Sil">✕</button></div>').join('')+
   '<div class="bar"><button class="ghost" data-a="addd">+ İçecek ekle</button></div>'+
@@ -285,13 +289,13 @@ document.addEventListener('click',async e=>{
  else if(a==='settle'||a==='settleA'){
   if(!(await needPin()))return;
   const now=Date.now(),b=bal(id),es=open_(id);
-  if(b>0){const pe={id:uid(),m:id,d:'Ödeme',p:-b,t:now,paid:true,paidAt:now,k:'pay'};S.entries.push(pe);entSave(pe)}
-  es.forEach(x=>{x.paid=true;x.paidAt=now;entSave(x)});render();snd('ok');toast('Hesap kapatıldı')}
+  let pe=null;if(b>0){pe={id:uid(),m:id,d:'Ödeme',p:-b,t:now,paid:true,paidAt:now,k:'pay',no:nextNo(now),kind:'tam',rest:0};S.entries.push(pe);entSave(pe)}
+  es.forEach(x=>{x.paid=true;x.paidAt=now;entSave(x)});render();snd('ok');if(pe)rcptDone(pe);else toast('Hesap kapatıldı')}
  else if(a==='part'){
   if(!(await needPin()))return;
   const v=await dlg({title:'Kısmi ödeme',msg:'Alınan tutarı gir.',num:true,ok:'Kaydet'});if(v===false)return;
   const n=parseFloat(String(v).replace(',','.'));if(!(n>0)){toast('Geçerli bir tutar gir');return}
-  const pe={id:uid(),m:id,d:'Ödeme',p:-n,t:Date.now(),paid:false,k:'pay'};S.entries.push(pe);entSave(pe);render();snd('ok');toast(money(n)+' ödeme alındı')}
+  const t=Date.now(),pe={id:uid(),m:id,d:'Ödeme',p:-n,t:t,paid:false,k:'pay',no:nextNo(t),kind:'kismi',rest:bal(id)-n};S.entries.push(pe);entSave(pe);render();snd('ok');rcptDone(pe)}
  else if(a==='addd'){S.drinks.push({id:uid(),name:'Yeni içecek',price:0});cfgSave();render()}
  else if(a==='rmd'){if(await dlg({title:'İçecek silinsin mi?',msg:'Geçmiş kayıtlar etkilenmez.',ok:'Sil'})){S.drinks=S.drinks.filter(x=>x.id!==id);cfgSave();render()}}
  else if(a==='wipe'){if(await dlg({title:'Tüm veriler silinsin mi?',msg:'Üyeler, fiyatlar ve tüm hesap kayıtları sıfırlanır.',ok:'Evet, sıfırla'})){const old=S.entries,oldc=S.cash||[];S=defaults();S.entries=[];if(DB){old.forEach(x=>DB.collection('entries').doc(x.id).delete().catch(netErr));oldc.forEach(x=>DB.collection('cash').doc(x.id).delete().catch(netErr))}cfgSave();go('home')}}
@@ -323,6 +327,8 @@ document.addEventListener('click',async e=>{
  else if(a==='rnext'){rM++;if(rM>11){rM=0;rY++}render()}
  else if(a==='csv')exportCsv();
  else if(a==='shop')go('shop');
+ else if(a==='rcpt'){const pe=S.entries.find(x=>x.id===id);if(pe)rcptDlg(pe)}
+ else if(a==='rcpts')go('rcpts');
  else if(a==='net')toast(netState()[2]);
  else if(a==='reload'){toast('Yenileniyor…');setTimeout(()=>{const u=location.href.split('#')[0].replace(/[?&]r=\d+/,'');location.replace(u+(u.indexOf('?')>-1?'&':'?')+'r='+Date.now())},300)}
  else if(a==='bk'){if(await needPin())backup(false)}
@@ -430,6 +436,74 @@ async function restore(file){
 document.addEventListener('change',e=>{if(e.target.id==='rfile'&&e.target.files&&e.target.files[0])restore(e.target.files[0])});
 const IMGS=[['carlsberg','img/carlsberg.jpg'],['miller','img/miller3.jpg'],['bud','img/bud.jpg'],['tuborg','img/tuborg.jpg'],['perge','img/perge.jpg'],['heineken','img/heineken.jpg'],['şalgam','img/salgam.jpg'],['salgam','img/salgam.jpg'],['cola','img/kola.jpg'],['kola','img/kola.jpg'],['fanta','img/kola.jpg'],['sprite','img/kola.jpg'],['nespresso','img/nespresso.jpg'],['soda','img/soda.jpg'],['türk kahve','img/turkkahvesi2.jpg'],['turk kahve','img/turkkahvesi2.jpg'],['meyve suyu','img/meyvesuyu2.jpg']];
 function dImg(n){n=String(n).toLocaleLowerCase('tr-TR');for(const x of IMGS)if(n.indexOf(x[0])>-1)return x[1];return ''}
+function nextNo(t){const y=new Date(t).getFullYear(),pre='HN-'+y+'-';let mx=0;
+ S.entries.forEach(x=>{if(x.no&&x.no.indexOf(pre)===0){const n=parseInt(x.no.slice(pre.length),10);if(n>mx)mx=n}});
+ return pre+String(mx+1).padStart(4,'0')}
+function mName(id){const m=S.members.find(x=>x.id===id);return m?m.name:'?'}
+function rcptList(rs,title,who){if(!rs.length)return '';
+ return (title?'<h2>'+title+'</h2>':'')+'<div class="log">'+rs.map(x=>'<div class="cl"><span class="d"><b style="font-weight:800">'+x.no+'</b>'+(who?' · '+esc(mName(x.m)):'')+'<br><span style="color:var(--mu);font-size:14px">'+when(x.t)+(x.kind==='kismi'?' · kısmi ödeme':'')+'</span></span><b>'+money(-x.p)+'</b><button class="ghost" data-a="rcpt" data-id="'+x.id+'">Makbuz</button></div>').join('')+'</div>'}
+async function rcptDone(pe){
+ const r=await dlg({title:'Makbuz kesildi',msg:pe.no+' · '+mName(pe.m)+' · '+money(-pe.p),ok:'Makbuzu aç',cancel:'Kapat'});
+ if(r)rcptDlg(pe)}
+function rcptData(pe){
+ const items=pe.kind==='tam'?S.entries.filter(x=>x.m===pe.m&&x.k!=='pay'&&x.paidAt===pe.paidAt).sort((x,y)=>x.t-y.t):[];
+ const prev=pe.kind==='tam'?S.entries.filter(x=>x.m===pe.m&&x.k==='pay'&&x.id!==pe.id&&x.paidAt===pe.paidAt).sort((x,y)=>x.t-y.t):[];
+ return{items:items,prev:prev}}
+function rcptCanvas(pe){
+ const W=1240,P=90,D=rcptData(pe),NL=D.items.length+D.prev.length,show=Math.min(NL,22);
+ const H=Math.max(1754,1180+show*52);
+ const c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');
+ const F='-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif';
+ const tx=(s,x,y,sz,wt,al,col)=>{g.font=(wt||400)+' '+sz+'px '+F;g.textAlign=al||'left';g.fillStyle=col||'#1b2a24';g.fillText(s,x,y)};
+ const ln=(y,col,w)=>{g.strokeStyle=col||'#cfd8d3';g.lineWidth=w||2;g.beginPath();g.moveTo(P,y);g.lineTo(W-P,y);g.stroke()};
+ g.fillStyle='#fff';g.fillRect(0,0,W,H);
+ g.fillStyle='#1f4d3a';g.fillRect(0,0,W,220);
+ tx('HANE LOKALİ',P,120,64,800,'left','#fff');tx('TAHSİLAT MAKBUZU',P,175,32,600,'left','#cfe6da');
+ tx(pe.no,W-P,120,48,800,'right','#fff');tx(new Date(pe.t).toLocaleString('tr-TR',{day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'}),W-P,175,30,500,'right','#cfe6da');
+ let y=320;
+ const row=(k,v,big)=>{tx(k,P,y,30,500,'left','#5d6f67');tx(v,W-P,y,big?44:34,big?800:600,'right',big?'#1f4d3a':'#1b2a24');y+=big?80:66};
+ row('Üye',mName(pe.m));row('Ödeme türü',pe.kind==='tam'?'Hesap kapatma':pe.kind==='kismi'?'Kısmi ödeme':'Ödeme');
+ ln(y-30);y+=20;row('Alınan tutar',money(-pe.p),true);
+ if(typeof pe.rest==='number')row('Ödeme sonrası kalan bakiye',money(pe.rest));
+ ln(y-30);y+=30;
+ if(NL){tx('Kapatılan kalemler',P,y,34,700);y+=60;
+  const all=D.items.map(x=>[when(x.t),x.d,money(x.p)]).concat(D.prev.map(x=>[when(x.t),'Önceki kısmi ödeme'+(x.no?' ('+x.no+')':''),money(x.p)]));
+  all.slice(0,show).forEach(r=>{tx(r[0],P,y,26,400,'left','#5d6f67');tx(r[1],P+300,y,28,500);tx(r[2],W-P,y,28,600,'right');y+=52});
+  if(NL>show){tx('+ '+(NL-show)+' kalem daha',P+300,y,26,500,'left','#5d6f67');y+=52}
+  y+=10;ln(y-30)}
+ y=Math.max(y+60,H-260);
+ ln(y-60,'#1f4d3a',3);
+ tx('Bu makbuz Hane uygulamasında elektronik olarak düzenlenmiştir.',W/2,y,26,400,'center','#5d6f67');
+ tx('İmza / kaşe gerektirmez.',W/2,y+44,26,400,'center','#5d6f67');
+ tx('Teşekkür ederiz!',W/2,y+120,36,700,'center','#1f4d3a');
+ return c}
+function pdfFromJpeg(b64,w,h){
+ const bin=atob(b64),PW=595.28,PH=PW*h/w,objs=[],enc=s=>{const u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i)&255;return u};
+ const cs='q '+PW.toFixed(2)+' 0 0 '+PH.toFixed(2)+' 0 0 cm /Im0 Do Q';
+ objs.push('<< /Type /Catalog /Pages 2 0 R >>');
+ objs.push('<< /Type /Pages /Kids [3 0 R] /Count 1 >>');
+ objs.push('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+PW.toFixed(2)+' '+PH.toFixed(2)+'] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>');
+ objs.push(['<< /Type /XObject /Subtype /Image /Width '+w+' /Height '+h+' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '+bin.length+' >>\nstream\n',bin,'\nendstream']);
+ objs.push('<< /Length '+cs.length+' >>\nstream\n'+cs+'\nendstream');
+ let out='%PDF-1.4\n%\xE2\xE3\xCF\xD3\n';const off=[];
+ objs.forEach((o,i)=>{off.push(out.length);out+=(i+1)+' 0 obj\n'+(Array.isArray(o)?o.join(''):o)+'\nendobj\n'});
+ const xr=out.length;out+='xref\n0 '+(objs.length+1)+'\n0000000000 65535 f \n'+off.map(o=>String(o).padStart(10,'0')+' 00000 n \n').join('');
+ out+='trailer\n<< /Size '+(objs.length+1)+' /Root 1 0 R >>\nstartxref\n'+xr+'\n%%EOF';
+ return new Blob([enc(out)],{type:'application/pdf'})}
+function rcptPdf(pe){const c=rcptCanvas(pe),u=c.toDataURL('image/jpeg',0.9);return pdfFromJpeg(u.slice(u.indexOf(',')+1),c.width,c.height)}
+function rcptDlg(pe){
+ const c=rcptCanvas(pe),name='Makbuz-'+pe.no+'.pdf',m=S.members.find(x=>x.id===pe.m);
+ const d=document.createElement('div');d.className='ov';
+ d.innerHTML='<div class="box" style="width:min(560px,100%);max-height:92vh;overflow:auto"><h3>'+pe.no+'</h3><img alt="Makbuz" style="width:100%;border:1px solid var(--ln);border-radius:10px;margin:6px 0 4px"><div class="row" style="flex-wrap:wrap"><button class="ghost" data-r="x">Kapat</button><button class="ghost" data-r="d">PDF indir</button>'+(m&&m.email?'<button class="ghost" data-r="m">Mail metni</button>':'')+'<button class="main" data-r="s">PDF paylaş</button></div><div class="sub" style="margin-top:10px">“PDF paylaş” ile WhatsApp, Mail ya da Dosyalar’a gönderebilirsin.</div></div>';
+ d.querySelector('img').src=c.toDataURL('image/jpeg',0.85);document.body.appendChild(d);
+ d.onclick=async e=>{const r=e.target.dataset.r;if(!r)return;
+  if(r==='x')d.remove();
+  else if(r==='d'){const b=rcptPdf(pe),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{a.remove();URL.revokeObjectURL(u)},4000)}
+  else if(r==='s'){const b=rcptPdf(pe);let f=null;try{f=new File([b],name,{type:'application/pdf'})}catch(x){}
+   if(f&&navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f],title:pe.no})}catch(x){if(!x||x.name!=='AbortError')toast('Paylaşma açılamadı')}}
+   else{const u=URL.createObjectURL(b);window.open(u,'_blank')||toast('PDF açılamadı');setTimeout(()=>URL.revokeObjectURL(u),60000)}}
+  else if(r==='m'){d.remove();const NL=String.fromCharCode(10),sub='Hane makbuzu '+pe.no,body=['Merhaba '+m.name+',','',pe.no+' numaralı makbuzunuz:','Tarih: '+when(pe.t),'Alınan tutar: '+money(-pe.p),(typeof pe.rest==='number'?'Kalan bakiye: '+money(pe.rest):''),'','PDF makbuz ekte. (Mail uygulamasında ataç ile Dosyalar’dan ekleyebilirsiniz.)','','Hane'].join(NL);
+   mailDlg(m,sub,body,'mailto:'+m.email+'?subject='+encodeURIComponent(sub)+'&body='+encodeURIComponent(body))}}}
 function chipsHtml(){return S.cats.map(x=>'<button class="ghost" style="min-height:44px;padding:8px 14px" data-a="chip" data-v="'+esc(x)+'">'+esc(x)+'</button>').join('')}
 function repo(){
  const s0=new Date(rY,rM,1).getTime(),e0=new Date(rY,rM+1,1).getTime();
