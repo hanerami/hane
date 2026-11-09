@@ -89,6 +89,7 @@ input{background:var(--sf);border:2px solid var(--ln);border-radius:12px;padding
 #beer .msg i{display:block;font-style:normal;font-size:min(4.5vw,24px);font-weight:600;margin-top:8px;opacity:.85}
 #beer.out{transition:opacity .9s;opacity:0}
 #beer.out .liq{transform:translateY(100%);transition:transform .9s ease-in}
+#upd{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);background:var(--ac);color:var(--on);padding:12px 20px;border-radius:99px;font-weight:800;font-size:16px;z-index:40;box-shadow:0 6px 20px rgba(0,0,0,.25);cursor:pointer;white-space:nowrap;max-width:calc(100% - 24px);overflow:hidden;text-overflow:ellipsis}
 #undo.on~#net{opacity:0;pointer-events:none}
 #undo.on{opacity:1;transform:translateX(-50%);pointer-events:auto}
 #undo span{overflow:hidden;text-overflow:ellipsis}
@@ -356,7 +357,7 @@ document.addEventListener('click',async e=>{
  else if(a==='rcpt'){const pe=S.entries.find(x=>x.id===id);if(pe)rcptDlg(pe)}
  else if(a==='rcpts')go('rcpts');
  else if(a==='net')toast(netState()[2]);
- else if(a==='reload'){toast('Yenileniyor…');setTimeout(()=>{const u=location.href.split('#')[0].replace(/[?&]r=\d+/,'');location.replace(u+(u.indexOf('?')>-1?'&':'?')+'r='+Date.now())},300)}
+ else if(a==='reload'){toast('Yenileniyor…');setTimeout(hardReload,300)}
  else if(a==='bk'){if(await needPin())backup(false)}
  else if(a==='rs'){if(await needPin()){const f=document.getElementById('rfile');if(f){f.value='';f.click()}}}
  else if(a==='sp'){SP=+b.dataset.v;render()}
@@ -462,6 +463,24 @@ async function restore(file){
 document.addEventListener('change',e=>{if(e.target.id==='rfile'&&e.target.files&&e.target.files[0])restore(e.target.files[0])});
 const IMGS=[['carlsberg','img/carlsberg.jpg'],['miller','img/miller3.jpg'],['bud','img/bud.jpg'],['tuborg','img/tuborg.jpg'],['perge','img/perge.jpg'],['heineken','img/heineken.jpg'],['şalgam','img/salgam.jpg'],['salgam','img/salgam.jpg'],['cola','img/kola.jpg'],['kola','img/kola.jpg'],['fanta','img/kola.jpg'],['sprite','img/kola.jpg'],['nespresso','img/nespresso.jpg'],['soda','img/soda.jpg'],['türk kahve','img/turkkahvesi2.jpg'],['turk kahve','img/turkkahvesi2.jpg'],['meyve suyu','img/meyvesuyu2.jpg'],['red bull','img/redbull2.jpg'],['redbull','img/redbull2.jpg'],['pellegrino','img/pellegrino2.jpg']];
 function dImg(n){n=String(n).toLocaleLowerCase('tr-TR');for(const x of IMGS)if(n.indexOf(x[0])>-1)return x[1];return ''}
+function hardReload(){const u=location.href.split('#')[0].replace(/[?&]r=\d+/,'');location.replace(u+(u.indexOf('?')>-1?'&':'?')+'r='+Date.now())}
+let UPD='',lastAct=Date.now(),lastChk=0;
+function sigOf(d){let s='';d.querySelectorAll('script:not([src]),style').forEach(e=>{s+=e.textContent+'|'});let x=5381;for(let i=0;i<s.length;i++)x=((x<<5)+x+s.charCodeAt(i))|0;return x+':'+s.length}
+async function checkUpd(){
+ if(UPD||!navigator.onLine||location.protocol==='file:')return;const now=Date.now();if(now-lastChk<60000)return;lastChk=now;
+ try{const r=await fetch(location.pathname+'?vc='+now,{cache:'no-store'});if(!r.ok)return;
+  const d=new DOMParser().parseFromString(await r.text(),'text/html');if(!d.querySelector('#app'))return;
+  const s=sigOf(d);if(s===sigOf(document))return;
+  UPD=s;const el=document.createElement('div');el.id='upd';el.dataset.a='reload';el.textContent='Hane güncellendi · yenilemek için dokun';document.body.appendChild(el)}catch(e){}}
+function updTick(){if(!UPD)return;
+ const busy=view!=='home'||document.querySelector('.ov,#beer,#undo.on')||NET.pend||!navigator.onLine;
+ if(busy||Date.now()-lastAct<60000)return;
+ let done='';try{done=sessionStorage.getItem('hane-upd')||''}catch(e){}
+ if(done===UPD)return;try{sessionStorage.setItem('hane-upd',UPD)}catch(e){}
+ hardReload()}
+['pointerdown','keydown'].forEach(n=>document.addEventListener(n,()=>{lastAct=Date.now()},true));
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkUpd()});
+setTimeout(checkUpd,20000);setInterval(checkUpd,300000);setInterval(updTick,5000);
 function balTxt(b){return b<0?'Kullanılabilir bakiye: '+money(-b):'Açık bakiye: '+money(b)}
 function nextNo(t){const y=new Date(t).getFullYear(),pre='HN-'+y+'-';let mx=0;
  S.entries.forEach(x=>{if(x.no&&x.no.indexOf(pre)===0){const n=parseInt(x.no.slice(pre.length),10);if(n>mx)mx=n}});
