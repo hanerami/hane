@@ -138,6 +138,13 @@ button.topup{background:#1b7f46;color:#fff;border-radius:14px;padding:12px 22px;
 select{background:var(--sf);border:2px solid var(--ln);border-radius:12px;padding:10px 12px;font-size:18px;min-height:48px;width:100%;color:inherit;font:inherit}
 .cf2{position:fixed;top:-20px;width:10px;height:16px;border-radius:2px;z-index:70;pointer-events:none;animation:cf2 linear forwards}
 @keyframes cf2{to{transform:translateY(110vh) rotate(720deg)}}
+.member.gold{position:relative;overflow:hidden;border:3px solid #e2b53a;background:linear-gradient(135deg,color-mix(in srgb,#f5d061 45%,var(--sf)),color-mix(in srgb,#f5d061 14%,var(--sf)) 55%,color-mix(in srgb,#d4a62a 32%,var(--sf)));box-shadow:0 0 0 1px #f5d061 inset,0 4px 18px color-mix(in srgb,#d4a62a 35%,transparent);animation:glow 3.5s ease-in-out infinite}
+.member.gold::after{content:'';position:absolute;top:-20%;bottom:-20%;left:-60%;width:40%;background:linear-gradient(100deg,transparent,rgba(255,240,190,.75),transparent);transform:skewX(-18deg);animation:shine 3.5s ease-in-out infinite;pointer-events:none}
+@keyframes shine{0%,55%{left:-60%}85%,100%{left:130%}}
+@keyframes glow{0%,100%{box-shadow:0 0 0 1px #f5d061 inset,0 4px 14px color-mix(in srgb,#d4a62a 25%,transparent)}50%{box-shadow:0 0 0 1px #f5d061 inset,0 4px 24px color-mix(in srgb,#d4a62a 55%,transparent)}}
+.member.gold .b.has{color:#a87400}
+:root[data-theme="dark"] .member.gold .b.has{color:#f5d061}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .member.gold .b.has{color:#f5d061}}
 #upd{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);background:var(--ac);color:var(--on);padding:12px 20px;border-radius:99px;font-weight:800;font-size:16px;z-index:40;box-shadow:0 6px 20px rgba(0,0,0,.25);cursor:pointer;white-space:nowrap;max-width:calc(100% - 24px);overflow:hidden;text-overflow:ellipsis}
 #undo.on~#net{opacity:0;pointer-events:none}
 #undo.on{opacity:1;transform:translateX(-50%);pointer-events:auto}
@@ -264,7 +271,7 @@ function render(){
  if(view==='home'){
   const tot=S.members.reduce((s,m)=>s+Math.max(0,bal(m.id)),0);
   a.innerHTML='<header class="hh"><div><h1 style="font-size:0"><img class="logo lt" src="img/logo.png" alt="Hane"><img class="logo dk" src="img/logo-dark.png" alt="Hane"></h1><div class="sub">Adını seç, içeceğine dokun, hesabına yazılsın.</div></div><div id="clk">'+clkHtml()+'</div><div style="display:flex;gap:10px;align-items:center"><button class="ghost" data-a="reload" aria-label="Ekranı yenile" style="min-width:64px;min-height:64px;font-size:28px;padding:0">↻</button><div class="bal"><span>Açık hesaplar toplamı</span><b>'+money(tot)+'</b></div></div></header>'+
-  '<div class="grid mg">'+S.members.map(m=>{const b=bal(m.id);return '<button class="member'+(b>0?' owe':'')+(isBday(m)?' bd':'')+'" data-a="open" data-id="'+m.id+'">'+(isBday(m)?'<span class="bdtag">🎂 Doğum günü!</span>':'')+'<span class="n">'+esc(m.name)+'</span><span class="b'+(b>0?' has':b<0?' cr':'')+'">'+(b>0?money(b):b<0?'Bakiye '+money(-b):'Hesap temiz')+'</span></button>'}).join('')+'</div>'+
+  '<div class="grid mg">'+S.members.map(m=>{const b=bal(m.id);return '<button class="member'+(b>0?' owe':'')+(m.id===topId()?' gold':'')+(isBday(m)?' bd':'')+'" data-a="open" data-id="'+m.id+'">'+(isBday(m)?'<span class="bdtag">🎂 Doğum günü!</span>':'')+'<span class="n">'+esc(m.name)+'</span><span class="b'+(b>0?' has':b<0?' cr':'')+'">'+(b>0?money(b):b<0?'Bakiye '+money(-b):'Hesap temiz')+'</span></button>'}).join('')+'</div>'+
   '<div class="bar" style="justify-content:flex-end"><button class="ghost" data-a="admin">Yönetim</button></div><div class="sub" style="margin:14px 0 calc(64px + env(safe-area-inset-bottom,0px));text-align:center;font-size:14px">'+(DB?'Kayıtlar tüm cihazlarda ortak.':'Kayıtlar yalnızca bu cihazda tutuluyor.')+'</div>';
  }else if(view==='member'){
   const m=S.members.find(x=>x.id===cur),es=open_(cur).sort((x,y)=>y.t-x.t),mb=bal(cur);
@@ -567,6 +574,7 @@ function bdayDlg(m){return new Promise(res=>{
   if(r==='x'){d.remove();res(null)}
   else if(r==='del'){d.remove();res({del:true})}
   else{if(!a.value||!b.value){toast('Gün ve ayı seç');return}const dm=[31,29,31,30,31,30,31,31,30,31,30,31][parseInt(b.value,10)-1];if(parseInt(a.value,10)>dm){toast('Bu ayda o gün yok');return}d.remove();res({v:b.value+'-'+a.value})}}})}
+function topId(){let id=null,mx=0,n=0;S.members.forEach(m=>{const b=bal(m.id);if(b>mx){mx=b;id=m.id;n=1}else if(b===mx&&b>0)n++});return n===1?id:null}
 function balTxt(b){return b<0?'Kullanılabilir bakiye: '+money(-b):'Açık bakiye: '+money(b)}
 function nextNo(t){const y=new Date(t).getFullYear(),pre='HN-'+y+'-';let mx=0;
  S.entries.forEach(x=>{if(x.no&&x.no.indexOf(pre)===0){const n=parseInt(x.no.slice(pre.length),10);if(n>mx)mx=n}});
