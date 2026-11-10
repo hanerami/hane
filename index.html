@@ -20,6 +20,12 @@ button{cursor:pointer;border:0;touch-action:manipulation}
 #app{max-width:1100px;margin:0 auto;padding:20px 20px 60px}
 header{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:22px;flex-wrap:wrap}
 h1{margin:0;font-size:34px;font-weight:800;letter-spacing:-.02em}
+.logo{display:block;height:96px;width:auto;margin:-6px 0 4px -4px}
+.logo.dk{display:none}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .logo.lt{display:none}:root:not([data-theme="light"]) .logo.dk{display:block}}
+:root[data-theme="dark"] .logo.lt{display:none}
+:root[data-theme="dark"] .logo.dk{display:block}
+@media (max-width:560px){.logo{height:72px}}
 .sub{color:var(--mu);font-size:16px;margin-top:2px}
 .ghost{background:transparent;border:2px solid var(--ln);border-radius:14px;padding:12px 18px;font-weight:600;min-height:48px}
 .main{background:var(--ac);color:var(--on);border-radius:14px;padding:12px 22px;font-weight:800;min-height:48px}
@@ -211,7 +217,7 @@ function render(){
  const a=document.getElementById('app');
  if(view==='home'){
   const tot=S.members.reduce((s,m)=>s+Math.max(0,bal(m.id)),0);
-  a.innerHTML='<header><div><h1>Hane</h1><div class="sub">Adını seç, içeceğine dokun, hesabına yazılsın.</div></div><div style="display:flex;gap:10px;align-items:center"><button class="ghost" data-a="reload" aria-label="Ekranı yenile" style="min-width:64px;min-height:64px;font-size:28px;padding:0">↻</button><div class="bal"><span>Açık hesaplar toplamı</span><b>'+money(tot)+'</b></div></div></header>'+
+  a.innerHTML='<header><div><h1 style="font-size:0"><img class="logo lt" src="img/logo.png" alt="Hane"><img class="logo dk" src="img/logo-dark.png" alt="Hane"></h1><div class="sub">Adını seç, içeceğine dokun, hesabına yazılsın.</div></div><div style="display:flex;gap:10px;align-items:center"><button class="ghost" data-a="reload" aria-label="Ekranı yenile" style="min-width:64px;min-height:64px;font-size:28px;padding:0">↻</button><div class="bal"><span>Açık hesaplar toplamı</span><b>'+money(tot)+'</b></div></div></header>'+
   '<div class="grid">'+S.members.map(m=>{const b=bal(m.id);return '<button class="member" data-a="open" data-id="'+m.id+'"><span class="n">'+esc(m.name)+'</span><span class="b'+(b>0?' has':b<0?' cr':'')+'">'+(b>0?money(b):b<0?'Bakiye '+money(-b):'Hesap temiz')+'</span></button>'}).join('')+'</div>'+
   '<div class="bar"><button class="ghost" data-a="admin">Yönetim</button></div><div class="sub" style="margin-top:14px">'+(DB?'Kayıtlar tüm cihazlarda ortak.':'Kayıtlar yalnızca bu cihazda tutuluyor.')+'</div>';
  }else if(view==='member'){
@@ -482,6 +488,7 @@ function updTick(){if(!UPD)return;
 ['pointerdown','keydown'].forEach(n=>document.addEventListener(n,()=>{lastAct=Date.now()},true));
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkUpd()});
 setTimeout(checkUpd,20000);setInterval(checkUpd,300000);setInterval(updTick,5000);
+const LOGO=new Image();LOGO.src='img/logo-dark.png';
 function balTxt(b){return b<0?'Kullanılabilir bakiye: '+money(-b):'Açık bakiye: '+money(b)}
 function nextNo(t){const y=new Date(t).getFullYear(),pre='HN-'+y+'-';let mx=0;
  S.entries.forEach(x=>{if(x.no&&x.no.indexOf(pre)===0){const n=parseInt(x.no.slice(pre.length),10);if(n>mx)mx=n}});
@@ -505,7 +512,8 @@ function rcptCanvas(pe){
  const ln=(y,col,w)=>{g.strokeStyle=col||'#cfd8d3';g.lineWidth=w||2;g.beginPath();g.moveTo(P,y);g.lineTo(W-P,y);g.stroke()};
  g.fillStyle='#fff';g.fillRect(0,0,W,H);
  g.fillStyle='#1f4d3a';g.fillRect(0,0,W,220);
- tx('HANE LOKALİ',P,120,64,800,'left','#fff');tx('TAHSİLAT MAKBUZU',P,175,32,600,'left','#cfe6da');
+ if(LOGO.complete&&LOGO.naturalWidth){const lh=164,lw=lh*LOGO.naturalWidth/LOGO.naturalHeight;g.drawImage(LOGO,P,28,lw,lh);tx('TAHSİLAT MAKBUZU',P+lw+36,128,32,600,'left','#cfe6da')}
+ else{tx('HANE LOKALİ',P,120,64,800,'left','#fff');tx('TAHSİLAT MAKBUZU',P,175,32,600,'left','#cfe6da')}
  tx(pe.no,W-P,120,48,800,'right','#fff');tx(new Date(pe.t).toLocaleString('tr-TR',{day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'}),W-P,175,30,500,'right','#cfe6da');
  let y=320;
  const row=(k,v,big)=>{tx(k,P,y,30,500,'left','#5d6f67');tx(v,W-P,y,big?44:34,big?800:600,'right',big?'#1f4d3a':'#1b2a24');y+=big?80:66};
