@@ -145,6 +145,8 @@ select{background:var(--sf);border:2px solid var(--ln);border-radius:12px;paddin
 .member.gold .b.has{color:#a87400}
 :root[data-theme="dark"] .member.gold .b.has{color:#f5d061}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .member.gold .b.has{color:#f5d061}}
+.sig{text-align:center;font-size:12px;letter-spacing:.04em;color:var(--mu);opacity:.75;margin:8px 0 calc(64px + env(safe-area-inset-bottom,0px))}
+.sig b{color:var(--ac);font-weight:800;opacity:1}
 #upd{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);background:var(--ac);color:var(--on);padding:12px 20px;border-radius:99px;font-weight:800;font-size:16px;z-index:40;box-shadow:0 6px 20px rgba(0,0,0,.25);cursor:pointer;white-space:nowrap;max-width:calc(100% - 24px);overflow:hidden;text-overflow:ellipsis}
 #undo.on~#net{opacity:0;pointer-events:none}
 #undo.on{opacity:1;transform:translateX(-50%);pointer-events:auto}
@@ -272,7 +274,7 @@ function render(){
   const tot=S.members.reduce((s,m)=>s+Math.max(0,bal(m.id)),0);
   a.innerHTML='<header class="hh"><div><h1 style="font-size:0"><img class="logo lt" src="img/logo.png" alt="Hane"><img class="logo dk" src="img/logo-dark.png" alt="Hane"></h1><div class="sub">Adını seç, içeceğine dokun, hesabına yazılsın.</div></div><div id="clk">'+clkHtml()+'</div><div style="display:flex;gap:10px;align-items:center"><button class="ghost" data-a="reload" aria-label="Ekranı yenile" style="min-width:64px;min-height:64px;font-size:28px;padding:0">↻</button><div class="bal"><span>Açık hesaplar toplamı</span><b>'+money(tot)+'</b></div></div></header>'+
   '<div class="grid mg">'+S.members.map(m=>{const b=bal(m.id);return '<button class="member'+(b>0?' owe':'')+(m.id===topId()?' gold':'')+(isBday(m)?' bd':'')+'" data-a="open" data-id="'+m.id+'">'+(isBday(m)?'<span class="bdtag">🎂 Doğum günü!</span>':'')+'<span class="n">'+esc(m.name)+'</span><span class="b'+(b>0?' has':b<0?' cr':'')+'">'+(b>0?money(b):b<0?'Bakiye '+money(-b):'Hesap temiz')+'</span></button>'}).join('')+'</div>'+
-  '<div class="bar" style="justify-content:flex-end"><button class="ghost" data-a="admin">Yönetim</button></div><div class="sub" style="margin:14px 0 calc(64px + env(safe-area-inset-bottom,0px));text-align:center;font-size:14px">'+(DB?'Kayıtlar tüm cihazlarda ortak.':'Kayıtlar yalnızca bu cihazda tutuluyor.')+'</div>';
+  '<div class="bar" style="justify-content:flex-end"><button class="ghost" data-a="admin">Yönetim</button></div><div class="sub" style="margin:14px 0 0;text-align:center;font-size:14px">'+(DB?'Kayıtlar tüm cihazlarda ortak.':'Kayıtlar yalnızca bu cihazda tutuluyor.')+'</div><div class="sig">© 2026 Hane · Designed &amp; built by <b>Bora</b></div>';
  }else if(view==='member'){
   const m=S.members.find(x=>x.id===cur),es=open_(cur).sort((x,y)=>y.t-x.t),mb=bal(cur);
   a.innerHTML='<header><div><button class="ghost" data-a="home">‹ Geri</button><h1 style="margin-top:14px">'+esc(m.name)+'</h1></div><div class="bal'+(mb<0?' cr':'')+'"><span>'+(mb<0?'Bakiyen':'Hesabın')+'</span><b>'+money(Math.abs(mb))+'</b></div></header>'+(isBday(m)?'<div class="bdbox"><span>🎂</span><div><b>İyi ki doğdun, '+esc(m.name)+'!</b><small>Hane ailesi olarak nice mutlu yıllar dileriz.</small></div></div>':'')+
