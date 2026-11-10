@@ -99,7 +99,8 @@ button.topup{background:#1b7f46;color:#fff;border-radius:14px;padding:12px 22px;
 #clk{text-align:center;line-height:1.05;margin:0 auto;align-self:center}
 #clk b{display:block;font-size:54px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
 #clk span{display:block;font-size:17px;font-weight:600;color:var(--mu);margin-top:4px}
-@media (max-width:900px){#clk{order:3;width:100%;display:flex;justify-content:center;align-items:baseline;gap:12px;margin:-4px 0 -6px}#clk b{font-size:36px}#clk span{margin:0}}
+@media (max-width:900px){header.hh{align-items:center}header.hh>div:first-child{display:contents}header.hh h1{order:1}header.hh #clk{order:2}header.hh>div:last-child{order:3}header.hh .sub{order:4;width:100%;margin-top:-8px}#clk b{font-size:46px}}
+@media (max-width:560px){header.hh{gap:12px}header.hh #clk{margin:0 0 0 auto;text-align:right}#clk b{font-size:44px}#clk span{font-size:15px}header.hh>div:last-child{width:100%}header.hh .bal{flex:1;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 18px;border-radius:16px}header.hh .bal span{font-size:15px;text-align:left}header.hh .bal b{font-size:28px;white-space:nowrap}header.hh [data-a=reload]{order:2;min-width:56px!important;min-height:56px!important;border-radius:16px}header.hh .sub{font-size:14px;margin-top:-4px}}
 #upd{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);background:var(--ac);color:var(--on);padding:12px 20px;border-radius:99px;font-weight:800;font-size:16px;z-index:40;box-shadow:0 6px 20px rgba(0,0,0,.25);cursor:pointer;white-space:nowrap;max-width:calc(100% - 24px);overflow:hidden;text-overflow:ellipsis}
 #undo.on~#net{opacity:0;pointer-events:none}
 #undo.on{opacity:1;transform:translateX(-50%);pointer-events:auto}
@@ -221,7 +222,7 @@ function render(){
  const a=document.getElementById('app');
  if(view==='home'){
   const tot=S.members.reduce((s,m)=>s+Math.max(0,bal(m.id)),0);
-  a.innerHTML='<header><div><h1 style="font-size:0"><img class="logo lt" src="img/logo.png" alt="Hane"><img class="logo dk" src="img/logo-dark.png" alt="Hane"></h1><div class="sub">Adını seç, içeceğine dokun, hesabına yazılsın.</div></div><div id="clk">'+clkHtml()+'</div><div style="display:flex;gap:10px;align-items:center"><button class="ghost" data-a="reload" aria-label="Ekranı yenile" style="min-width:64px;min-height:64px;font-size:28px;padding:0">↻</button><div class="bal"><span>Açık hesaplar toplamı</span><b>'+money(tot)+'</b></div></div></header>'+
+  a.innerHTML='<header class="hh"><div><h1 style="font-size:0"><img class="logo lt" src="img/logo.png" alt="Hane"><img class="logo dk" src="img/logo-dark.png" alt="Hane"></h1><div class="sub">Adını seç, içeceğine dokun, hesabına yazılsın.</div></div><div id="clk">'+clkHtml()+'</div><div style="display:flex;gap:10px;align-items:center"><button class="ghost" data-a="reload" aria-label="Ekranı yenile" style="min-width:64px;min-height:64px;font-size:28px;padding:0">↻</button><div class="bal"><span>Açık hesaplar toplamı</span><b>'+money(tot)+'</b></div></div></header>'+
   '<div class="grid">'+S.members.map(m=>{const b=bal(m.id);return '<button class="member" data-a="open" data-id="'+m.id+'"><span class="n">'+esc(m.name)+'</span><span class="b'+(b>0?' has':b<0?' cr':'')+'">'+(b>0?money(b):b<0?'Bakiye '+money(-b):'Hesap temiz')+'</span></button>'}).join('')+'</div>'+
   '<div class="bar"><button class="ghost" data-a="admin">Yönetim</button></div><div class="sub" style="margin-top:14px">'+(DB?'Kayıtlar tüm cihazlarda ortak.':'Kayıtlar yalnızca bu cihazda tutuluyor.')+'</div>';
  }else if(view==='member'){
