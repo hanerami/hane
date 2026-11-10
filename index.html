@@ -143,8 +143,23 @@ select{background:var(--sf);border:2px solid var(--ln);border-radius:12px;paddin
 @keyframes shine{0%,55%{left:-60%}85%,100%{left:130%}}
 @keyframes glow{0%,100%{box-shadow:0 0 0 1px #f5d061 inset,0 4px 14px color-mix(in srgb,#d4a62a 25%,transparent)}50%{box-shadow:0 0 0 1px #f5d061 inset,0 4px 24px color-mix(in srgb,#d4a62a 55%,transparent)}}
 .member.gold .b.has{color:#a87400;display:inline-block;align-self:flex-start;transform-origin:left center;animation:beat 1.4s ease-in-out infinite}
-.member .cup{position:absolute;top:12px;right:14px;font-size:34px;line-height:1;z-index:2;animation:spin 3s linear infinite;filter:drop-shadow(0 2px 4px rgba(120,80,0,.35))}
-@keyframes spin{from{transform:perspective(200px) rotateY(0)}to{transform:perspective(200px) rotateY(360deg)}}
+.member.gold>span:not(.cup){position:relative;z-index:1}
+.member .cup{position:absolute;top:0;bottom:0;right:4px;width:46%;display:flex;align-items:center;justify-content:center;perspective:420px;pointer-events:none;z-index:0}
+.member .cup .c3{position:relative;width:1em;height:1em;font-size:min(64px,calc(100% - 4px));font-size:66px;transform-style:preserve-3d;animation:spin3 3.2s linear infinite}
+.member .cup i{position:absolute;inset:0;font-style:normal;line-height:1;text-align:center;backface-visibility:visible}
+.member .cup i:nth-child(1){transform:translateZ(4px)}
+.member .cup i:nth-child(2){transform:translateZ(3px);filter:brightness(.8)}
+.member .cup i:nth-child(3){transform:translateZ(2px);filter:brightness(.72)}
+.member .cup i:nth-child(4){transform:translateZ(1px);filter:brightness(.66)}
+.member .cup i:nth-child(5){transform:translateZ(0);filter:brightness(.6)}
+.member .cup i:nth-child(6){transform:translateZ(-1px);filter:brightness(.66)}
+.member .cup i:nth-child(7){transform:translateZ(-2px);filter:brightness(.72)}
+.member .cup i:nth-child(8){transform:translateZ(-3px);filter:brightness(.8)}
+.member .cup i:nth-child(9){transform:translateZ(-4px) rotateY(180deg)}
+.member .cup .flr{position:absolute;bottom:6px;left:50%;width:54px;height:9px;margin-left:-27px;border-radius:50%;background:radial-gradient(rgba(90,60,0,.45),transparent 70%);animation:flr 1.6s ease-in-out infinite}
+@keyframes spin3{from{transform:rotateX(-8deg) rotateY(0)}to{transform:rotateX(-8deg) rotateY(360deg)}}
+@keyframes flr{0%,100%{transform:scaleX(1)}50%{transform:scaleX(.45)}}
+@media (min-width:561px){.member .cup .c3{font-size:84px}.member .cup{width:40%}}
 @keyframes beat{0%,40%,100%{transform:scale(1)}10%{transform:scale(1.22)}20%{transform:scale(1)}30%{transform:scale(1.14)}}
 :root[data-theme="dark"] .member.gold .b.has{color:#f5d061}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .member.gold .b.has{color:#f5d061}}
@@ -276,7 +291,7 @@ function render(){
  if(view==='home'){
   const tot=S.members.reduce((s,m)=>s+Math.max(0,bal(m.id)),0);
   a.innerHTML='<header class="hh"><div><h1 style="font-size:0"><img class="logo lt" src="img/logo.png" alt="Hane"><img class="logo dk" src="img/logo-dark.png" alt="Hane"></h1><div class="sub">Adını seç, içeceğine dokun, hesabına yazılsın.</div></div><div id="clk">'+clkHtml()+'</div><div style="display:flex;gap:10px;align-items:center"><button class="ghost" data-a="reload" aria-label="Ekranı yenile" style="min-width:64px;min-height:64px;font-size:28px;padding:0">↻</button><div class="bal"><span>Açık hesaplar toplamı</span><b>'+money(tot)+'</b></div></div></header>'+
-  '<div class="grid mg">'+S.members.map(m=>{const b=bal(m.id);return '<button class="member'+(b>0?' owe':'')+(m.id===topId()?' gold':'')+(isBday(m)?' bd':'')+'" data-a="open" data-id="'+m.id+'">'+(isBday(m)?'<span class="bdtag">🎂 Doğum günü!</span>':'')+(m.id===topId()?'<span class="cup" aria-hidden="true">🏆</span>':'')+'<span class="n">'+esc(m.name)+'</span><span class="b'+(b>0?' has':b<0?' cr':'')+'">'+(b>0?money(b):b<0?'Bakiye '+money(-b):'Hesap temiz')+'</span></button>'}).join('')+'</div>'+
+  '<div class="grid mg">'+S.members.map(m=>{const b=bal(m.id);return '<button class="member'+(b>0?' owe':'')+(m.id===topId()?' gold':'')+(isBday(m)?' bd':'')+'" data-a="open" data-id="'+m.id+'">'+(isBday(m)?'<span class="bdtag">🎂 Doğum günü!</span>':'')+(m.id===topId()?'<span class="cup" aria-hidden="true"><span class="c3">'+'<i>🏆</i>'.repeat(9)+'</span><b class="flr"></b></span>':'')+'<span class="n">'+esc(m.name)+'</span><span class="b'+(b>0?' has':b<0?' cr':'')+'">'+(b>0?money(b):b<0?'Bakiye '+money(-b):'Hesap temiz')+'</span></button>'}).join('')+'</div>'+
   '<div class="bar" style="justify-content:flex-end"><button class="ghost" data-a="admin">Yönetim</button></div><div class="sub" style="margin:14px 0 0;text-align:center;font-size:14px">'+(DB?'Kayıtlar tüm cihazlarda ortak.':'Kayıtlar yalnızca bu cihazda tutuluyor.')+'</div><div class="sig">© 2026 Hane · Designed &amp; built by <b>Bora</b></div>';
  }else if(view==='member'){
   const m=S.members.find(x=>x.id===cur),es=open_(cur).sort((x,y)=>y.t-x.t),mb=bal(cur);
