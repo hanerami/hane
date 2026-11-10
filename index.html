@@ -235,8 +235,8 @@ function dlg(o){return new Promise(res=>{
 let ADM=0;const ADM_MS=600000;
 function admOk(){return ADM&&view!=='home'&&view!=='member'&&Date.now()-ADM<ADM_MS}
 document.addEventListener('pointerdown',()=>{if(admOk())ADM=Date.now()},true);
-async function needPin(){
- if(admOk()){ADM=Date.now();return true}
+async function needPin(force){
+ if(!force&&admOk()){ADM=Date.now();return true}
  const v=await dlg({title:'Yönetici PIN’i',pin:true,ok:'Onayla'});
  if(v===false)return false;
  if(v===S.pin)return true;
@@ -351,7 +351,9 @@ document.addEventListener('click',async e=>{
   entDel(id);render();toast('Kayıt silindi')}
  else if(a==='settle'||a==='settleA'){
   if(bal(id)<0){toast('Bu hesapta bakiye var, kapatılacak borç yok');return}
-  if(!(await needPin()))return;
+  {const n0=open_(id).filter(x=>x.k!=='pay').length;
+   if(!(await dlg({title:mName(id)+' hesabı kapatılsın mı?',msg:n0+' kalem, toplam '+money(bal(id))+'. Ödemenin alındığından emin ol. Bu işlem makbuz keser.',ok:'Evet, kapat'})))return}
+  if(!(await needPin(true)))return;
   const now=Date.now(),b=bal(id),es=open_(id);
   let pe=null;if(b>0){pe={id:uid(),m:id,d:'Ödeme',p:-b,t:now,paid:true,paidAt:now,k:'pay',no:nextNo(now),kind:'tam',rest:0};S.entries.push(pe);entSave(pe)}
   es.forEach(x=>{x.paid=true;x.paidAt=now;entSave(x)});render();snd('ok');if(pe){await beerParty(mName(id),-pe.p);rcptDone(pe)}else toast('Hesap kapatıldı')}
