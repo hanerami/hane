@@ -232,7 +232,11 @@ function dlg(o){return new Promise(res=>{
  if(p&&o.pin)p.addEventListener('input',()=>{if(p.value&&(o.accept||[S.pin]).indexOf(p.value)>-1){d.remove();res(p.value)}});
  d.onclick=e=>{const r=e.target.dataset.r;if(r===undefined)return;const v=p?p.value:true;d.remove();res(r==='1'?v:false)};
 })}
+let ADM=0;const ADM_MS=600000;
+function admOk(){return ADM&&view!=='home'&&view!=='member'&&Date.now()-ADM<ADM_MS}
+document.addEventListener('pointerdown',()=>{if(admOk())ADM=Date.now()},true);
 async function needPin(){
+ if(admOk()){ADM=Date.now();return true}
  const v=await dlg({title:'Yönetici PIN’i',pin:true,ok:'Onayla'});
  if(v===false)return false;
  if(v===S.pin)return true;
@@ -244,7 +248,7 @@ async function memberPin(m){
  snd('bad');toast('PIN yanlış');return false}
 
 function resetIdle(){clearTimeout(idle);if(view==='member')idle=setTimeout(()=>go('home'),15000)}
-function go(v,m){view=v;cur=m||null;render();window.scrollTo(0,0);resetIdle()}
+function go(v,m){if(v==='home'||v==='member')ADM=0;view=v;cur=m||null;render();window.scrollTo(0,0);resetIdle()}
 
 function render(){
  const a=document.getElementById('app');
@@ -338,7 +342,7 @@ document.addEventListener('click',async e=>{
  const a=b.dataset.a,id=b.dataset.id;resetIdle();
  if(a==='open'){const mm=S.members.find(x=>x.id===id);if(mm&&mm.pin&&!(await memberPin(mm)))return;go('member',id)}
  else if(a==='home')go('home');
- else if(a==='admin'){if(await needPin())go('admin')}
+ else if(a==='admin'){if(await needPin()){ADM=Date.now();go('admin')}}
  else if(a==='add'){const d=S.drinks.find(x=>x.id===id);S.entries.push({id:uid(),m:cur,d:d.name,p:d.price,t:Date.now(),paid:false});const ne=S.entries[S.entries.length-1];entSave(ne);render();snd('add');const nb=bal(cur);toast(nb>=0&&nb-d.price<0?'Ön ödemeli bakiye bitti, bundan sonrası hesaba yazılır':d.name+' hesabına yazıldı')}
  else if(a==='undo'){hideUndo();if(S.entries.some(x=>x.id===id&&!x.paid)){entDel(id);render();toast('Geri alındı')}}
  else if(a==='del'){const en=S.entries.find(x=>x.id===id);if(!en)return;const late=en.k==='pay'||Date.now()-en.t>SELF_DEL_MS;
