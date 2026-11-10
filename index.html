@@ -314,7 +314,7 @@ document.addEventListener('click',async e=>{
  if(a==='open'){const mm=S.members.find(x=>x.id===id);if(mm&&mm.pin&&!(await memberPin(mm)))return;go('member',id)}
  else if(a==='home')go('home');
  else if(a==='admin'){if(await needPin())go('admin')}
- else if(a==='add'){const d=S.drinks.find(x=>x.id===id);S.entries.push({id:uid(),m:cur,d:d.name,p:d.price,t:Date.now(),paid:false});const ne=S.entries[S.entries.length-1];entSave(ne);render();snd('add');showUndo(ne);const nb=bal(cur);if(nb>=0&&nb-d.price<0)toast('Ön ödemeli bakiye bitti, bundan sonrası hesaba yazılır')}
+ else if(a==='add'){const d=S.drinks.find(x=>x.id===id);S.entries.push({id:uid(),m:cur,d:d.name,p:d.price,t:Date.now(),paid:false});const ne=S.entries[S.entries.length-1];entSave(ne);render();snd('add');const nb=bal(cur);toast(nb>=0&&nb-d.price<0?'Ön ödemeli bakiye bitti, bundan sonrası hesaba yazılır':d.name+' hesabına yazıldı')}
  else if(a==='undo'){hideUndo();if(S.entries.some(x=>x.id===id&&!x.paid)){entDel(id);render();toast('Geri alındı')}}
  else if(a==='del'){const en=S.entries.find(x=>x.id===id);if(!en)return;const late=en.k==='pay'||Date.now()-en.t>SELF_DEL_MS;
   if(late){if(!(await needPin()))return}
