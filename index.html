@@ -231,7 +231,7 @@ function render(){
   a.innerHTML='<header><div><button class="ghost" data-a="home">‹ Geri</button><h1 style="margin-top:14px">'+esc(m.name)+'</h1></div><div class="bal'+(mb<0?' cr':'')+'"><span>'+(mb<0?'Bakiyen':'Hesabın')+'</span><b>'+money(Math.abs(mb))+'</b></div></header>'+
   '<div class="grid dg">'+S.drinks.map(d=>{const c=es.filter(e=>e.d===d.name).length;const im=dImg(d.name);return '<button class="drink'+(im?' pic':'')+(c?' hc':'')+'" data-a="add" data-id="'+d.id+'">'+(im?'<img class="i" src="'+im+'" alt="">':'')+(c?'<span class="c">'+c+'</span>':'')+'<span class="n">'+esc(d.name)+'</span><span class="p">'+money(d.price)+'</span></button>'}).join('')+'</div>'+
   '<h2>Hesabındakiler</h2><div class="log">'+(es.length?es.map(e=>'<div'+(e.k==='pay'?' class="pay"':'')+'><span class="t">'+when(e.t)+'</span><span class="d">'+esc(e.d)+(e.no?' <span style="color:var(--mu);font-size:14px">'+e.no+'</span>':'')+'</span><b>'+money(e.p)+'</b>'+(e.no?'<button class="x" data-a="rcpt" data-id="'+e.id+'" aria-label="Makbuz">🧾</button>':'')+'<button class="x" data-a="del" data-id="'+e.id+'" aria-label="Sil">✕</button></div>').join(''):'<div class="empty">Henüz bir şey yazılmadı.</div>')+'</div>'+
-  '<div class="bar">'+(mb>0?'<button class="ghost" data-a="part" data-id="'+cur+'">Kısmi ödeme al</button>':'')+(es.length&&mb>=0?'<button class="main" data-a="settle" data-id="'+cur+'">Ödeme alındı, hesabı kapat</button>':'')+'<button class="topup" data-a="topup" data-id="'+cur+'">Bakiye yükle</button></div>'+(mb<0?'<div class="sub" style="margin-top:10px">Ön ödemeli bakiye var. İçecekler bu bakiyeden düşer, bitince hesaba borç olarak yazılır.</div>':'')+'<div class="bar"><button class="ghost" data-a="mail" data-id="'+cur+'">Makbuz ve ekstreyi mail ile gönder</button></div>'+rcptList(S.entries.filter(x=>x.m===cur&&x.no).sort((x,y)=>y.t-x.t).slice(0,5),'Son makbuzlar',false);
+  '<div class="bar">'+(mb>0?'<button class="ghost" data-a="part" data-id="'+cur+'">Kısmi ödeme al</button>':'')+(es.length&&mb>=0?'<button class="main" data-a="settle" data-id="'+cur+'">Ödeme alındı, hesabı kapat</button>':'')+'<button class="topup" data-a="topup" data-id="'+cur+'">Bakiye yükle</button></div>'+(mb<0?'<div class="sub" style="margin-top:10px">Ön ödemeli bakiye var. İçecekler bu bakiyeden düşer, bitince hesaba borç olarak yazılır.</div>':'')+'<div class="bar"><button class="ghost" data-a="mail" data-id="'+cur+'">Makbuz ve ekstreyi mail ile gönder</button><button class="ghost" data-a="mypin" data-id="'+cur+'">'+(m.pin?'PIN’imi değiştir':'Kendime PIN koy')+'</button></div>'+rcptList(S.entries.filter(x=>x.m===cur&&x.no).sort((x,y)=>y.t-x.t).slice(0,5),'Son makbuzlar',false);
  }else if(view==='cash'){
   const inc=-S.entries.filter(e=>e.k==='pay').reduce((s,e)=>s+e.p,0),aid=Object.values(S.dues).reduce((s,r)=>s+r.a,0),
    oth=S.cash.filter(x=>x.k==='in').reduce((s,x)=>s+x.a,0),exp=S.cash.filter(x=>x.k==='out').reduce((s,x)=>s+x.a,0),total=S.open+inc+aid+oth-exp;
@@ -331,6 +331,14 @@ document.addEventListener('click',async e=>{
   const v=await dlg({title:'Kısmi ödeme',msg:'Alınan tutarı gir.',num:true,ok:'Kaydet'});if(v===false)return;
   const n=parseFloat(String(v).replace(',','.'));if(!(n>0)){toast('Geçerli bir tutar gir');return}
   const t=Date.now(),pe={id:uid(),m:id,d:'Ödeme',p:-n,t:t,paid:false,k:'pay',no:nextNo(t),kind:'kismi',rest:bal(id)-n};S.entries.push(pe);entSave(pe);render();snd('ok');rcptDone(pe)}
+ else if(a==='mypin'){
+  const m=S.members.find(x=>x.id===id);if(!m)return;
+  if(m.pin){const o=await dlg({title:'Şimdiki PIN',msg:'Önce şimdiki PIN’ini yaz.',pin:true,ok:'Devam',accept:[m.pin,S.pin]});if(o===false)return;if(o!==m.pin&&o!==S.pin){snd('bad');toast('PIN yanlış');return}}
+  const n1=await dlg({title:'Yeni PIN',msg:'4 rakamlı yeni PIN’ini yaz.',pin:true,ok:'Devam',accept:[]});if(n1===false)return;
+  if(!/^\d{4}$/.test(n1)){snd('bad');toast('PIN 4 rakam olmalı, değişmedi');return}
+  const n2=await dlg({title:'Yeni PIN (tekrar)',msg:'Aynı PIN’i bir kez daha yaz.',pin:true,ok:'Kaydet',accept:[n1]});if(n2===false)return;
+  if(n2!==n1){snd('bad');toast('İki PIN aynı değil, değişmedi');return}
+  m.pin=n1;cfgSave();render();snd('ok');toast(m.name+', PIN’in kaydedildi')}
  else if(a==='topup'){
   if(!(await needPin()))return;
   const v=await dlg({title:'Bakiye yükle',msg:'Üyenin önceden yatırdığı tutarı gir. Borcu varsa önce ondan düşer, kalanı bakiye olur.',num:true,ok:'Yükle'});if(v===false)return;
