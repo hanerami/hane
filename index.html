@@ -142,7 +142,8 @@ select{background:var(--sf);border:2px solid var(--ln);border-radius:12px;paddin
 .member.gold::after{content:'';position:absolute;top:-20%;bottom:-20%;left:-60%;width:40%;background:linear-gradient(100deg,transparent,rgba(255,240,190,.75),transparent);transform:skewX(-18deg);animation:shine 3.5s ease-in-out infinite;pointer-events:none}
 @keyframes shine{0%,55%{left:-60%}85%,100%{left:130%}}
 @keyframes glow{0%,100%{box-shadow:0 0 0 1px #f5d061 inset,0 4px 14px color-mix(in srgb,#d4a62a 25%,transparent)}50%{box-shadow:0 0 0 1px #f5d061 inset,0 4px 24px color-mix(in srgb,#d4a62a 55%,transparent)}}
-.member.gold .b.has{color:#a87400}
+.member.gold .b.has{color:#a87400;display:inline-block;align-self:flex-start;transform-origin:left center;animation:beat 1.4s ease-in-out infinite}
+@keyframes beat{0%,40%,100%{transform:scale(1)}10%{transform:scale(1.22)}20%{transform:scale(1)}30%{transform:scale(1.14)}}
 :root[data-theme="dark"] .member.gold .b.has{color:#f5d061}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .member.gold .b.has{color:#f5d061}}
 .sig{text-align:center;font-size:12px;letter-spacing:.04em;color:var(--mu);opacity:.75;margin:8px 0 calc(64px + env(safe-area-inset-bottom,0px))}
