@@ -239,7 +239,7 @@ function tickTxt(){const d0=new Date();d0.setHours(0,0,0,0);const c={};let n=0;
  if(n){P.push('🔥 Bugün Hane’de '+Object.entries(c).sort((a,b)=>b[1]-a[1]).map(x=>x[1]+' '+x[0]).join(' · ')+' içildi')}
  else P.push('☕ Bugün henüz kimse bir şey içmedi, ilk sen ol!');
  return P.join('     •     ')}
-function tickDraw(){const w=document.getElementById('tick');if(!w)return;const on=view==='home';w.hidden=!on;if(!on)return;const t=tickTxt();if(w.dataset.t===t)return;w.dataset.t=t;const k=w.firstChild;k.innerHTML='<span>'+esc(t)+'</span><span aria-hidden="true">'+esc(t)+'</span>';k.style.animationDuration=(Math.max(16,t.length*.2)-.3)+'s'}
+function tickDraw(){const w=document.getElementById('tick');if(!w)return;const on=view==='home';w.hidden=!on;if(!on)return;const t=tickTxt();if(w.dataset.t===t)return;w.dataset.t=t;const k=w.firstChild;k.innerHTML='<span>'+esc(t)+'</span><span aria-hidden="true">'+esc(t)+'</span>';k.style.animationDuration='14s'}
 function cashDel(id){S.cash=S.cash.filter(x=>x.id!==id);save();if(DB)DB.collection('cash').doc(id).delete().catch(netErr)}
 const typing=()=>document.activeElement&&document.activeElement.tagName==='INPUT';
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
