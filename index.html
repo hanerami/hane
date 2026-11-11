@@ -20,6 +20,7 @@ button{cursor:pointer;border:0;touch-action:manipulation}
 #tick{overflow:hidden;background:var(--ac);color:var(--on);font-weight:700;font-size:16px;height:38px;display:flex;align-items:center;white-space:nowrap;position:relative}
 #tick::before,#tick::after{content:'';position:absolute;top:0;bottom:0;width:22px;z-index:1;background:linear-gradient(90deg,var(--ac),transparent)}#tick::after{right:0;transform:scaleX(-1)}#tick::before{left:0}
 #tick[hidden]{display:none}
+#tick .tm{display:inline-block;padding:2px 10px;border-radius:8px;font-weight:900;line-height:1.35;margin:0 2px;letter-spacing:.01em}
 #tick .tk{display:inline-flex;animation:tk 30s linear infinite;will-change:transform}
 #tick .tk span{min-width:100vw;padding-right:70px;box-sizing:border-box}
 @keyframes tk{from{transform:translateX(0)}to{transform:translateX(-50%)}}
@@ -310,15 +311,16 @@ async function matchLoad(force){if(!force&&MATCH&&Date.now()-MATCH.at<6*36e5)ret
  if(!Object.keys(ev).length&&MATCH)return;MATCH={at:Date.now(),ev:Object.values(ev)};try{localStorage.setItem('hane-mac',JSON.stringify(MATCH))}catch(e){}tickDraw()}
 function matchTxt(){if(!MATCH||!MATCH.ev)return [];const d0=new Date();d0.setHours(0,0,0,0);const t0=+d0,out=[];
  MATCH.ev.map(e=>{let s=e.ts||'';if(s&&!/Z|[+-]\d\d:?\d\d$/.test(s))s+='Z';return Object.assign({t:Date.parse(s)},e)}).filter(e=>e.t>=Date.now()-2*36e5&&e.t<t0+2*864e5).sort((a,b)=>a.t-b.t)
- .forEach(e=>{const n=v=>MTR[v]||v,hm=new Date(e.t).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});out.push('⚽ '+(e.t<t0+864e5?'Bugün':'Yarın')+' '+hm+' '+n(e.h)+' – '+n(e.a))});return out}
+ .forEach(e=>{const n=v=>{const x=MTR[v]||v,c=TEAMC[x];return c?'<b class="tm" style="background:'+c[0]+';color:'+c[1]+(c[2]?';box-shadow:inset 0 0 0 2px '+c[2]:'')+'">'+esc(x)+'</b>':esc(x)},hm=new Date(e.t).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});out.push('⚽ '+(e.t<t0+864e5?'Bugün':'Yarın')+' '+hm+' '+n(e.h)+' – '+n(e.a))});return out}
+const TEAMC={Galatasaray:['#A90432','#FDB912','#FDB912'],'Fenerbahçe':['#0A1F5C','#FFED00','#FFED00'],'Beşiktaş':['#111','#fff','#fff'],'Türkiye':['#E30A17','#fff']};
 function tickTxt(){const d0=new Date();d0.setHours(0,0,0,0);const c={};let n=0;
- const P=[];S.entries.filter(e=>e.q&&e.t>=+d0).sort((a,b)=>b.t-a.t).forEach(e=>{const m=S.members.find(x=>x.id===e.m);P.push('🎁 '+(m?m.name:'Biri')+' herkese '+e.d+' ısmarladı!')});
+ const P=[];S.entries.filter(e=>e.q&&e.t>=+d0).sort((a,b)=>b.t-a.t).forEach(e=>{const m=S.members.find(x=>x.id===e.m);P.push(esc('🎁 '+(m?m.name:'Biri')+' herkese '+e.d+' ısmarladı!'))});
  S.entries.forEach(e=>{if(!e.k&&e.p>0&&e.t>=+d0){c[e.d]=(c[e.d]||0)+(e.q||1);n++}});
- if(n){P.push('🔥 Bugün Hane’de '+Object.entries(c).sort((a,b)=>b[1]-a[1]).map(x=>x[1]+' '+x[0]).join(' · ')+' içildi')}
+ if(n){P.push(esc('🔥 Bugün Hane’de '+Object.entries(c).sort((a,b)=>b[1]-a[1]).map(x=>x[1]+' '+x[0]).join(' · ')+' içildi'))}
  else P.push('☕ Bugün henüz kimse bir şey içmedi, ilk sen ol!');
  P.push(...matchTxt());
  return P.join('     •     ')}
-function tickDraw(){const w=document.getElementById('tick');if(!w)return;const on=view==='home';w.hidden=!on;if(!on)return;const t=tickTxt();if(w.dataset.t===t)return;w.dataset.t=t;const k=w.firstChild;k.innerHTML='<span>'+esc(t)+'</span><span aria-hidden="true">'+esc(t)+'</span>';k.style.animationDuration='14s'}
+function tickDraw(){const w=document.getElementById('tick');if(!w)return;const on=view==='home';w.hidden=!on;if(!on)return;const t=tickTxt();if(w.dataset.t===t)return;w.dataset.t=t;const k=w.firstChild;k.innerHTML='<span>'+t+'</span><span aria-hidden="true">'+t+'</span>';k.style.animationDuration='14s'}
 function kasaTot(){const inc=-S.entries.filter(e=>e.k==='pay').reduce((s,e)=>s+e.p,0),aid=Object.values(S.dues).reduce((s,r)=>s+r.a,0),oth=S.cash.filter(x=>x.k==='in').reduce((s,x)=>s+x.a,0),exp=S.cash.filter(x=>x.k==='out').reduce((s,x)=>s+x.a,0);return S.open+inc+aid+oth-exp}
 function cashDel(id){S.cash=S.cash.filter(x=>x.id!==id);save();if(DB)DB.collection('cash').doc(id).delete().catch(netErr)}
 const typing=()=>document.activeElement&&document.activeElement.tagName==='INPUT';
