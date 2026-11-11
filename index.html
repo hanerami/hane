@@ -103,6 +103,11 @@ input{background:var(--sf);border:2px solid var(--ln);border-radius:12px;padding
 #beer.out .liq{transform:translateY(100%);transition:transform .9s ease-in}
 button.topup{background:#1b7f46;color:#fff;border-radius:14px;padding:12px 22px;font-weight:800;min-height:48px}
 header.hh{margin-top:-12px;margin-bottom:14px}
+.kduo{display:flex;flex:1;background:var(--sf);border:2px solid var(--ln);border-radius:22px;overflow:hidden}
+.kduo>div{flex:1;display:flex;flex-direction:column;justify-content:center;padding:10px 16px;gap:2px;min-width:0}
+.kduo span{font-size:13px;color:var(--mu);font-weight:600;white-space:nowrap}.kduo b{font-size:26px;font-weight:900;white-space:nowrap}
+.kduo .kk{background:color-mix(in srgb,#2e9e5b 14%,var(--sf));border-right:2px solid var(--ln)}.kduo .kk b{color:#2e9e5b}.kduo .ka b{color:var(--ac)}
+@media (max-width:560px){.kduo>div{padding:10px 12px}.kduo b{font-size:clamp(18px,5.6vw,24px)}}
 .mg+.bar{margin-top:12px}
 #clk{text-align:center;line-height:1.05;margin:0 auto;align-self:center}
 #clk b{display:block;font-size:54px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
@@ -258,6 +263,7 @@ function tickTxt(){const d0=new Date();d0.setHours(0,0,0,0);const c={};let n=0;
  else P.push('☕ Bugün henüz kimse bir şey içmedi, ilk sen ol!');
  return P.join('     •     ')}
 function tickDraw(){const w=document.getElementById('tick');if(!w)return;const on=view==='home';w.hidden=!on;if(!on)return;const t=tickTxt();if(w.dataset.t===t)return;w.dataset.t=t;const k=w.firstChild;k.innerHTML='<span>'+esc(t)+'</span><span aria-hidden="true">'+esc(t)+'</span>';k.style.animationDuration='14s'}
+function kasaTot(){const inc=-S.entries.filter(e=>e.k==='pay').reduce((s,e)=>s+e.p,0),aid=Object.values(S.dues).reduce((s,r)=>s+r.a,0),oth=S.cash.filter(x=>x.k==='in').reduce((s,x)=>s+x.a,0),exp=S.cash.filter(x=>x.k==='out').reduce((s,x)=>s+x.a,0);return S.open+inc+aid+oth-exp}
 function cashDel(id){S.cash=S.cash.filter(x=>x.id!==id);save();if(DB)DB.collection('cash').doc(id).delete().catch(netErr)}
 const typing=()=>document.activeElement&&document.activeElement.tagName==='INPUT';
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -329,7 +335,7 @@ function render(){setTimeout(tickDraw,0);
  const a=document.getElementById('app');
  if(view==='home'){
   const tot=S.members.reduce((s,m)=>s+Math.max(0,bal(m.id)),0);
-  a.innerHTML='<header class="hh"><div><h1 style="font-size:0"><img class="logo lt" src="img/logo.png" alt="Hane"><img class="logo dk" src="img/logo-dark.png" alt="Hane"></h1></div><div id="clk">'+clkHtml()+'</div><div style="display:flex;gap:10px;align-items:center"><button class="ghost" data-a="reload" aria-label="Ekranı yenile" style="min-width:64px;min-height:64px;font-size:28px;padding:0">↻</button><div class="bal"><span>Açık hesaplar toplamı</span><b>'+money(tot)+'</b></div></div></header>'+
+  a.innerHTML='<header class="hh"><div><h1 style="font-size:0"><img class="logo lt" src="img/logo.png" alt="Hane"><img class="logo dk" src="img/logo-dark.png" alt="Hane"></h1></div><div id="clk">'+clkHtml()+'</div><div style="display:flex;gap:10px;align-items:center"><button class="ghost" data-a="reload" aria-label="Ekranı yenile" style="min-width:64px;min-height:64px;font-size:28px;padding:0">↻</button><div class="kduo"><div class="kk"><span>🏦 Ana kasa</span><b>'+money(kasaTot())+'</b></div><div class="ka"><span>Açık hesaplar</span><b>'+money(tot)+'</b></div></div></div></header>'+
   '<div class="grid mg">'+S.members.map(m=>{const b=bal(m.id);return '<button class="member'+(b>0?' owe':'')+(m.id===topId()?' gold':m.id===secId()?' silver':'')+(isBday(m)?' bd':'')+'" data-a="open" data-id="'+m.id+'">'+(isBday(m)?'<span class="bdtag">🎂 Doğum günü!</span>':'')+(m.id===topId()||m.id===secId()?'<span class="cup" aria-hidden="true"><span class="c3">'+'<i>🏆</i>'.repeat(9)+'</span><b class="flr"></b></span>':'')+'<span class="n">'+esc(m.name)+'</span><span class="b'+(b>0?' has':b<0?' cr':'')+'">'+(b>0?money(b):b<0?'Bakiye '+money(-b):'Hesap temiz')+'</span></button>'}).join('')+'</div>'+
   '<div class="bar" style="justify-content:flex-end"><button class="ghost" data-a="admin">Yönetim</button></div><div class="sub" style="margin:14px 0 0;text-align:center;font-size:14px">'+(DB?'Kayıtlar tüm cihazlarda ortak.':'Kayıtlar yalnızca bu cihazda tutuluyor.')+'</div><div class="sig">© 2026 Hane · Designed &amp; built by <b>Bora</b></div>';
  }else if(view==='member'){
