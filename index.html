@@ -735,7 +735,8 @@ window.addEventListener('online',netDraw);window.addEventListener('offline',netD
 async function initDb(){try{
  if(!window.firebase)throw new Error('sdk');
  if(!firebase.apps.length){firebase.initializeApp(FBCFG);
-  try{firebase.firestore().settings({experimentalAutoDetectLongPolling:true,ignoreUndefinedProperties:true,merge:true})}catch(e){}}
+  try{firebase.firestore().settings({experimentalAutoDetectLongPolling:true,ignoreUndefinedProperties:true,merge:true})}catch(e){}
+  try{await Promise.race([firebase.firestore().enablePersistence({synchronizeTabs:true}),new Promise(r=>setTimeout(r,4000))])}catch(e){console.warn('persist',e&&e.code)}}
  const c=firebase.firestore(),cd=c.doc('cfg/main'),first=await cd.get();
  if(!first.exists){await cd.set({pin:S.pin,members:S.members,drinks:S.drinks,aidat:S.aidat,dues:S.dues,open:S.open,cats:S.cats});for(const e of S.entries)await c.collection('entries').doc(e.id).set(e)}
  DB=c;
