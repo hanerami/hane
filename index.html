@@ -141,6 +141,23 @@ header.hh{margin-top:-12px;margin-bottom:14px}
 .member.bd{border-color:#d9488b;background:linear-gradient(0deg,color-mix(in srgb,#d9488b 10%,var(--sf)),var(--sf))}
 .bdtag{align-self:flex-start;font-size:13px;font-weight:800;padding:4px 10px;border-radius:99px;margin:-4px 0 8px;background:color-mix(in srgb,#d9488b 16%,var(--sf));color:#c2337a;animation:bdw 2.4s ease-in-out infinite}
 @keyframes bdw{0%,80%,100%{transform:none}86%{transform:rotate(-4deg)}93%{transform:rotate(4deg)}}
+.treatb{width:100%;margin:14px 0 0;min-height:56px;border-radius:16px;border:2px dashed var(--ac);background:color-mix(in srgb,var(--ac) 10%,var(--sf));color:var(--tx);font-size:18px;font-weight:800}
+.trt [data-r="1"]:disabled{opacity:.4}
+.tq{display:block;font-size:13px;font-weight:700;color:var(--ac)}
+.box.trt{width:min(560px,100%);max-height:calc(100vh - 40px);overflow:auto}
+.trt h3{margin:0 0 6px}.trt .tl{font-weight:800;margin:14px 0 8px;font-size:16px}.trt .tl small{color:var(--mu);font-weight:600;margin-left:6px}
+.tdr{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin:0 -4px;padding-left:4px;scroll-snap-type:x mandatory}
+.tdr button{flex:0 0 92px;scroll-snap-align:start;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border-radius:14px;border:2px solid var(--ln);background:var(--bg);font-size:12px;font-weight:700;line-height:1.15;min-height:0;color:var(--tx)}
+.tdr img{width:40px;height:40px;object-fit:contain}.tdr button.on{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 16%,var(--sf))}
+.tmb{display:flex;flex-wrap:wrap;gap:8px}.tmb button{padding:8px 14px;border-radius:99px;border:2px solid var(--ln);background:transparent;font-weight:700;font-size:15px;min-height:0;color:var(--mu)}
+.tmb button.on{border-color:#2e9e5b;background:color-mix(in srgb,#2e9e5b 18%,var(--sf));color:var(--tx)}
+.tsum{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center;margin:16px 0 4px;padding:14px 16px;border-radius:16px;background:color-mix(in srgb,var(--ac) 12%,var(--sf));border:2px solid var(--ac)}
+.tsum span{font-weight:700}.tsum b{font-size:24px;color:var(--ac)}.tsum small{grid-column:1/-1;color:var(--mu);font-size:13px}
+.tparty{z-index:40}.tcard{background:var(--sf);border:3px solid var(--ac);border-radius:28px;padding:28px 30px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px;animation:tpop .5s cubic-bezier(.2,1.6,.4,1)}
+.tcard img{width:110px;height:110px;object-fit:contain;animation:tbob 1.2s ease-in-out infinite}.tcard .te{font-size:80px}
+.tcard b{font-size:32px;font-weight:900}.tcard span{font-size:20px;font-weight:700}.tcard em{font-style:normal;color:var(--ac);font-weight:800;font-size:18px;margin-top:4px}
+@keyframes tpop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes tbob{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-8px) rotate(4deg)}}
 .bdbox{display:flex;align-items:center;gap:14px;background:color-mix(in srgb,#d9488b 12%,var(--sf));border:2px solid #d9488b;border-radius:20px;padding:14px 18px;margin:0 0 18px}
 .bdbox>span{font-size:40px;line-height:1}.bdbox b{display:block;font-size:20px}.bdbox small{display:block;font-size:14px;color:var(--mu);font-weight:600;margin-top:2px}
 select{background:var(--sf);border:2px solid var(--ln);border-radius:12px;padding:10px 12px;font-size:18px;min-height:48px;width:100%;color:inherit;font:inherit}
@@ -235,7 +252,8 @@ function entSave(e){save();if(DB)DB.collection('entries').doc(e.id).set(e).catch
 function entDel(id){S.entries=S.entries.filter(x=>x.id!==id);save();if(DB)DB.collection('entries').doc(id).delete().catch(netErr)}
 function cashSave(e){save();if(DB)DB.collection('cash').doc(e.id).set(e).catch(netErr)}
 function tickTxt(){const d0=new Date();d0.setHours(0,0,0,0);const c={};let n=0;
- S.entries.forEach(e=>{if(!e.k&&e.p>0&&e.t>=+d0){c[e.d]=(c[e.d]||0)+1;n++}});const P=[];
+ const P=[];S.entries.filter(e=>e.q&&e.t>=+d0).sort((a,b)=>b.t-a.t).forEach(e=>{const m=S.members.find(x=>x.id===e.m);P.push('🎁 '+(m?m.name:'Biri')+' herkese '+e.d+' ısmarladı!')});
+ S.entries.forEach(e=>{if(!e.k&&e.p>0&&e.t>=+d0){c[e.d]=(c[e.d]||0)+(e.q||1);n++}});
  if(n){P.push('🔥 Bugün Hane’de '+Object.entries(c).sort((a,b)=>b[1]-a[1]).map(x=>x[1]+' '+x[0]).join(' · ')+' içildi')}
  else P.push('☕ Bugün henüz kimse bir şey içmedi, ilk sen ol!');
  return P.join('     •     ')}
@@ -317,8 +335,9 @@ function render(){setTimeout(tickDraw,0);
  }else if(view==='member'){
   const m=S.members.find(x=>x.id===cur),es=open_(cur).sort((x,y)=>y.t-x.t),mb=bal(cur);
   a.innerHTML='<header><div><button class="ghost" data-a="home">‹ Geri</button><h1 style="margin-top:14px">'+esc(m.name)+'</h1></div><div class="bal'+(mb<0?' cr':'')+'"><span>'+(mb<0?'Bakiyen':'Hesabın')+'</span><b>'+money(Math.abs(mb))+'</b></div></header>'+(isBday(m)?'<div class="bdbox"><span>🎂</span><div><b>İyi ki doğdun, '+esc(m.name)+'!</b><small>Hane ailesi olarak nice mutlu yıllar dileriz.</small></div></div>':'')+
-  '<div class="grid dg">'+S.drinks.map(d=>{const c=es.filter(e=>e.d===d.name).length;const im=dImg(d.name);return '<button class="drink'+(im?' pic':'')+(c?' hc':'')+'" data-a="add" data-id="'+d.id+'">'+(im?'<img class="i" src="'+im+'" alt="">':'')+(c?'<span class="c">'+c+'</span>':'')+'<span class="n">'+esc(d.name)+'</span><span class="p">'+money(d.price)+'</span></button>'}).join('')+'</div>'+
-  '<h2>Hesabındakiler</h2><div class="log">'+(es.length?es.map(e=>'<div'+(e.k==='pay'?' class="pay"':'')+'><span class="t">'+when(e.t)+'</span><span class="d">'+esc(e.d)+(e.no?' <span style="color:var(--mu);font-size:14px">'+e.no+'</span>':'')+'</span><b>'+money(e.p)+'</b>'+(e.no?'<button class="x" data-a="rcpt" data-id="'+e.id+'" aria-label="Makbuz">🧾</button>':'')+'<button class="x" data-a="del" data-id="'+e.id+'" aria-label="Sil">✕</button></div>').join(''):'<div class="empty">Henüz bir şey yazılmadı.</div>')+'</div>'+
+  '<div class="grid dg">'+S.drinks.map(d=>{const c=es.filter(e=>e.d===d.name).reduce((s,e)=>s+(e.q||1),0);const im=dImg(d.name);return '<button class="drink'+(im?' pic':'')+(c?' hc':'')+'" data-a="add" data-id="'+d.id+'">'+(im?'<img class="i" src="'+im+'" alt="">':'')+(c?'<span class="c">'+c+'</span>':'')+'<span class="n">'+esc(d.name)+'</span><span class="p">'+money(d.price)+'</span></button>'}).join('')+'</div>'+
+  '<button class="treatb" data-a="treat">🎁 Herkese benden ısmarla</button>'+
+  '<h2>Hesabındakiler</h2><div class="log">'+(es.length?es.map(e=>'<div'+(e.k==='pay'?' class="pay"':'')+'><span class="t">'+when(e.t)+'</span><span class="d">'+esc(e.d)+(e.q?'<span class="tq">× '+e.q+' kişiye ikram</span>':'')+(e.no?' <span style="color:var(--mu);font-size:14px">'+e.no+'</span>':'')+'</span><b>'+money(e.p)+'</b>'+(e.no?'<button class="x" data-a="rcpt" data-id="'+e.id+'" aria-label="Makbuz">🧾</button>':'')+'<button class="x" data-a="del" data-id="'+e.id+'" aria-label="Sil">✕</button></div>').join(''):'<div class="empty">Henüz bir şey yazılmadı.</div>')+'</div>'+
   '<div class="pay"><div class="ph"><b>Ödeme</b><span>Yönetici PIN’i ister</span></div><div class="acts">'+(es.length&&mb>=0?'<button class="main wide" data-a="settle" data-id="'+cur+'">'+ic('ok')+'Ödeme alındı, hesabı kapat</button>':'')+(mb>0?'<button class="partb" data-a="part" data-id="'+cur+'">'+ic('part')+'Kısmi ödeme</button>':'')+'<button class="topup'+(mb>0?'':' wide')+'" data-a="topup" data-id="'+cur+'">'+ic('plus')+'Bakiye yükle</button></div>'+(mb<0?'<div class="sub" style="margin-top:10px;font-size:14px">Ön ödemeli bakiye var. İçecekler bu bakiyeden düşer, bitince hesaba borç olarak yazılır.</div>':'')+'</div><div class="acts sec"><button class="ghost" data-a="mail" data-id="'+cur+'">'+ic('mail')+'Ekstreyi gönder</button><button class="ghost" data-a="mypin" data-id="'+cur+'">'+ic('lock')+(m.pin?'PIN’imi değiştir':'Kendime PIN koy')+'</button><button class="ghost" data-a="bday" data-id="'+cur+'">🎂 '+(m.bday?bdTxt(m.bday):'Doğum günüm')+'</button></div>'+rcptList(S.entries.filter(x=>x.m===cur&&x.no).sort((x,y)=>y.t-x.t).slice(0,5),'Son makbuzlar',false);
  }else if(view==='cash'){
   const inc=-S.entries.filter(e=>e.k==='pay').reduce((s,e)=>s+e.p,0),aid=Object.values(S.dues).reduce((s,r)=>s+r.a,0),
@@ -400,6 +419,7 @@ document.addEventListener('click',async e=>{
  if(a==='open'){const mm=S.members.find(x=>x.id===id);if(mm&&mm.pin&&!(await memberPin(mm)))return;go('member',id)}
  else if(a==='home')go('home');
  else if(a==='admin'){if(await needPin()){ADM=Date.now();go('admin')}}
+ else if(a==='treat')treatDlg();
  else if(a==='add'){const d=S.drinks.find(x=>x.id===id);S.entries.push({id:uid(),m:cur,d:d.name,p:d.price,t:Date.now(),paid:false});const ne=S.entries[S.entries.length-1];entSave(ne);render();snd('add');const nb=bal(cur);toast(nb>=0&&nb-d.price<0?'Ön ödemeli bakiye bitti, bundan sonrası hesaba yazılır':d.name+' hesabına yazıldı')}
  else if(a==='undo'){hideUndo();if(S.entries.some(x=>x.id===id&&!x.paid)){entDel(id);render();toast('Geri alındı')}}
  else if(a==='del'){const en=S.entries.find(x=>x.id===id);if(!en)return;const late=en.k==='pay'||Date.now()-en.t>SELF_DEL_MS;
@@ -604,6 +624,27 @@ const AYLAR=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağusto
 function bdTxt(s){const p=String(s).split('-');return parseInt(p[1],10)+' '+AYLAR[parseInt(p[0],10)-1]}
 function isBday(m){if(!m.bday)return false;const d=new Date();return m.bday===String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function confetti(){const C=['#d9488b','#f0a93b','#1b7f46','#5aa9e6','#f7d34a','#b46be0'];for(let i=0;i<40;i++){const e=document.createElement('i');e.className='cf2';e.style.left=(Math.random()*100)+'%';e.style.background=C[i%C.length];e.style.animationDuration=(1.6+Math.random()*1.6)+'s';e.style.animationDelay=(Math.random()*.6)+'s';document.body.appendChild(e);setTimeout(()=>e.remove(),4000)}}
+function treatDlg(){const me=S.members.find(x=>x.id===cur);if(!me)return;
+ const D=S.drinks;let di=(D.find(x=>/türk kahve/i.test(x.name))||D[0]).id;const sel=new Set();
+ const o=document.createElement('div');o.className='ov';
+ const draw=()=>{const d=D.find(x=>x.id===di),n=sel.size;
+  o.innerHTML='<div class="box trt"><h3>🎁 Herkese benden</h3><div class="tl">Ne ısmarlıyorsun?</div><div class="tdr">'+D.map(x=>{const im=dImg(x.name);return '<button class="'+(x.id===di?'on':'')+'" data-d="'+x.id+'">'+(im?'<img src="'+im+'" alt="">':'')+'<span>'+esc(x.name)+'</span></button>'}).join('')+'</div>'+
+  '<div class="tl">Kimlere? <small>'+n+' kişi</small></div><div class="tmb">'+S.members.map(m=>'<button class="'+(sel.has(m.id)?'on':'')+'" data-m="'+m.id+'">'+(sel.has(m.id)?'✓ ':'')+esc(m.name)+'</button>').join('')+'</div>'+
+  '<div class="tsum"><span>'+n+' × '+esc(d.name)+'</span><b>'+money(n*d.price)+'</b><small>'+esc(me.name)+' hesabına yazılır, diğerlerine yazılmaz.</small></div>'+
+  '<div class="row"><button class="ghost" data-r="0">Vazgeç</button><button class="main" data-r="1"'+(n?'':' disabled')+'>Ismarla</button></div></div>'};
+ draw();document.body.appendChild(o);
+ o.onclick=e=>{const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.d){di=b.dataset.d;draw();return}
+  if(b.dataset.m){const id=b.dataset.m;sel.has(id)?sel.delete(id):sel.add(id);draw();return}
+  if(b.dataset.r==='0'){o.remove();return}
+  if(b.dataset.r==='1'){const d=D.find(x=>x.id===di),n=sel.size;if(!n)return;o.remove();
+   const ne={id:uid(),m:cur,d:d.name,p:d.price*n,q:n,t:Date.now(),paid:false};S.entries.push(ne);TSEEN.add(ne.id);entSave(ne);render();snd('add');treatParty(me.name,d.name,n)}}}
+const TSEEN=new Set();let TINIT=false;
+function treatWatch(){if(!TINIT){S.entries.forEach(e=>{if(e.q)TSEEN.add(e.id)});TINIT=true;return}
+ S.entries.forEach(e=>{if(e.q&&!TSEEN.has(e.id)){TSEEN.add(e.id);if(Date.now()-e.t<120000){const m=S.members.find(x=>x.id===e.m);treatParty(m?m.name:'Biri',e.d,e.q)}}})}
+function treatParty(name,drink,n){const im=dImg(drink);const o=document.createElement('div');o.className='ov tparty';
+ o.innerHTML='<div class="tcard">'+(im?'<img src="'+im+'" alt="">':'<div class="te">☕</div>')+'<b>'+esc(name)+'</b><span>herkese '+esc(drink)+' ısmarladı!</span><em>× '+n+' · Afiyet olsun 🎉</em></div>';
+ document.body.appendChild(o);confetti();const c=()=>o.remove();o.onclick=c;setTimeout(c,4500)}
 function bdayParty(m){if(!isBday(m))return;const k='hane-bd-'+m.id+'-'+new Date().toDateString();try{if(localStorage.getItem(k))return;localStorage.setItem(k,'1')}catch(e){}confetti()}
 function bdayDlg(m){return new Promise(res=>{
  const d=document.createElement('div');d.className='ov';const p=m.bday?m.bday.split('-'):['',''];
@@ -755,7 +796,7 @@ async function initDb(){try{
  if(!first.exists){await cd.set({pin:S.pin,members:S.members,drinks:S.drinks,aidat:S.aidat,dues:S.dues,open:S.open,cats:S.cats});for(const e of S.entries)await c.collection('entries').doc(e.id).set(e)}
  DB=c;
  cd.onSnapshot(sn=>{if(!sn.exists)return;const d=JSON.parse(JSON.stringify(sn.data()));S.pin=d.pin;S.members=d.members;S.drinks=d.drinks;S.aidat=d.aidat||0;S.dues=d.dues||{};S.open=d.open||0;S.cats=Array.isArray(d.cats)?d.cats:CATS0.slice();save();if(!typing())render()},dbErr);
- DB.collection('entries').onSnapshot(q=>{S.entries=q.docs.map(d=>Object.assign({},d.data(),{id:d.id}));save();if(!typing())render()},dbErr);
+ DB.collection('entries').onSnapshot(q=>{S.entries=q.docs.map(d=>Object.assign({},d.data(),{id:d.id}));save();treatWatch();if(!typing())render()},dbErr);
  const mt={};['cfg','entries','cash'].forEach(k=>{(k==='cfg'?cd:DB.collection(k)).onSnapshot({includeMetadataChanges:true},s=>{mt[k]=s.metadata;NET.pend=Object.keys(mt).some(x=>mt[x].hasPendingWrites);NET.cache=Object.keys(mt).some(x=>mt[x].fromCache);netDraw()},()=>{})});
  DB.collection('cash').onSnapshot(q=>{S.cash=q.docs.map(d=>Object.assign({},d.data(),{id:d.id}));save();if(!typing())render()},dbErr);
  render();
