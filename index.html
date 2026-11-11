@@ -17,6 +17,12 @@
 html,body{margin:0;background:var(--bg);color:var(--tx);font-family:"Bricolage Grotesque",system-ui,-apple-system,sans-serif;-webkit-user-select:none;user-select:none}
 button,input{font:inherit;color:inherit}
 button{cursor:pointer;border:0;touch-action:manipulation}
+#tick{overflow:hidden;background:var(--ac);color:var(--on);font-weight:700;font-size:16px;height:38px;display:flex;align-items:center;white-space:nowrap;position:relative}
+#tick::before,#tick::after{content:'';position:absolute;top:0;bottom:0;width:22px;z-index:1;background:linear-gradient(90deg,var(--ac),transparent)}#tick::after{right:0;transform:scaleX(-1)}#tick::before{left:0}
+#tick[hidden]{display:none}
+#tick .tk{display:inline-flex;animation:tk 30s linear infinite;will-change:transform}
+#tick .tk span{min-width:100vw;padding-right:70px;box-sizing:border-box}
+@keyframes tk{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 #app{max-width:1100px;margin:0 auto;padding:20px 20px 60px}
 header{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:22px;flex-wrap:wrap}
 h1{margin:0;font-size:34px;font-weight:800;letter-spacing:-.02em}
@@ -199,7 +205,7 @@ select{background:var(--sf);border:2px solid var(--ln);border-radius:12px;paddin
 </style>
 </head>
 <body>
-<div id="app"></div>
+<div id="tick" hidden><div class="tk"></div></div><div id="app"></div>
 <div id="undo"></div>
 <div id="toast"></div>
 <div id="net" class="wait" data-a="net"><i></i><span>Bağlanıyor…</span></div>
@@ -226,6 +232,12 @@ function cfgSave(){save();if(DB)DB.doc('cfg/main').set({pin:S.pin,members:S.memb
 function entSave(e){save();if(DB)DB.collection('entries').doc(e.id).set(e).catch(netErr)}
 function entDel(id){S.entries=S.entries.filter(x=>x.id!==id);save();if(DB)DB.collection('entries').doc(id).delete().catch(netErr)}
 function cashSave(e){save();if(DB)DB.collection('cash').doc(e.id).set(e).catch(netErr)}
+function tickTxt(){const d0=new Date();d0.setHours(0,0,0,0);const c={};let n=0;
+ S.entries.forEach(e=>{if(!e.k&&e.p>0&&e.t>=+d0){c[e.d]=(c[e.d]||0)+1;n++}});const P=[];
+ if(n){P.push('🔥 Bugün Hane’de '+Object.entries(c).sort((a,b)=>b[1]-a[1]).map(x=>x[1]+' '+x[0]).join(' · ')+' içildi')}
+ else P.push('☕ Bugün henüz kimse bir şey içmedi, ilk sen ol!');
+ return P.join('     •     ')}
+function tickDraw(){const w=document.getElementById('tick');if(!w)return;const on=view==='home';w.hidden=!on;if(!on)return;const t=tickTxt();if(w.dataset.t===t)return;w.dataset.t=t;const k=w.firstChild;k.innerHTML='<span>'+esc(t)+'</span><span aria-hidden="true">'+esc(t)+'</span>';k.style.animationDuration=Math.max(16,t.length*.2)+'s'}
 function cashDel(id){S.cash=S.cash.filter(x=>x.id!==id);save();if(DB)DB.collection('cash').doc(id).delete().catch(netErr)}
 const typing=()=>document.activeElement&&document.activeElement.tagName==='INPUT';
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -293,7 +305,7 @@ async function memberPin(m){
 function resetIdle(){clearTimeout(idle);if(view==='member')idle=setTimeout(()=>go('home'),15000)}
 function go(v,m){if(v==='member'&&m){const mm=S.members.find(x=>x.id===m);if(mm)setTimeout(()=>bdayParty(mm),300)}if(v==='home'||v==='member')ADM=0;view=v;cur=m||null;render();window.scrollTo(0,0);resetIdle()}
 
-function render(){
+function render(){setTimeout(tickDraw,0);
  const a=document.getElementById('app');
  if(view==='home'){
   const tot=S.members.reduce((s,m)=>s+Math.max(0,bal(m.id)),0);
@@ -731,7 +743,7 @@ function netState(){
  if(NET.cache)return['wait','Bağlanıyor…','İnternet var ama sunucuyla bağlantı henüz kurulmadı.'];
  return['ok','Bağlı','Her şey yolunda: kayıtlar sunucuya gidiyor ve diğer cihazlarla eşleşiyor.']}
 function netDraw(){const el=document.getElementById('net');if(!el)return;const s=netState();el.className=s[0];el.querySelector('span').textContent=s[1]}
-window.addEventListener('online',netDraw);window.addEventListener('offline',netDraw);setInterval(netDraw,5000);
+window.addEventListener('online',netDraw);window.addEventListener('offline',netDraw);setInterval(netDraw,5000);setInterval(tickDraw,60000);
 async function initDb(){try{
  if(!window.firebase)throw new Error('sdk');
  if(!firebase.apps.length){firebase.initializeApp(FBCFG);
