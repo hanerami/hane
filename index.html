@@ -303,11 +303,20 @@ function instDlg(){const o=document.createElement('div');o.className='ov';const 
    const g=uid(),[Y,M,D]=t.split('-').map(Number);for(let i=0;i<n;i++){const x={id:uid(),g,d,a,n:s+i,due:new Date(Y,M-1+i,D,12).getTime(),paid:false};S.inst.push(x);instSave(x)}
    o.remove();render();snd('ok');toast('Taksit planı eklendi')}}}
 function cashSave(e){save();if(DB)DB.collection('cash').doc(e.id).set(e).catch(netErr)}
+const MTEAMS=[133804,133807,133794,135985],MTR={Fenerbahce:'Fenerbahçe',Besiktas:'Beşiktaş','Beşiktaş JK':'Beşiktaş',Turkey:'Türkiye',Turkiye:'Türkiye'};
+let MATCH=(()=>{try{return JSON.parse(localStorage.getItem('hane-mac')||'null')}catch(e){return null}})();
+async function matchLoad(force){if(!force&&MATCH&&Date.now()-MATCH.at<6*36e5)return;const ev={};
+ for(const id of MTEAMS){try{const r=await fetch('https://www.thesportsdb.com/api/v1/json/123/eventsnext.php?id='+id,{cache:'no-store'});if(!r.ok)continue;const j=await r.json();(j.events||j.results||[]).forEach(e=>{if(e&&e.idEvent&&e.strSport!=='Basketball')ev[e.idEvent]={h:e.strHomeTeam,a:e.strAwayTeam,ts:e.strTimestamp||((e.dateEvent||'')+'T'+(e.strTime||'00:00:00'))}})}catch(e){}}
+ if(!Object.keys(ev).length&&MATCH)return;MATCH={at:Date.now(),ev:Object.values(ev)};try{localStorage.setItem('hane-mac',JSON.stringify(MATCH))}catch(e){}tickDraw()}
+function matchTxt(){if(!MATCH||!MATCH.ev)return [];const d0=new Date();d0.setHours(0,0,0,0);const t0=+d0,out=[];
+ MATCH.ev.map(e=>{let s=e.ts||'';if(s&&!/Z|[+-]\d\d:?\d\d$/.test(s))s+='Z';return Object.assign({t:Date.parse(s)},e)}).filter(e=>e.t>=Date.now()-2*36e5&&e.t<t0+2*864e5).sort((a,b)=>a.t-b.t)
+ .forEach(e=>{const n=v=>MTR[v]||v,hm=new Date(e.t).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});out.push('⚽ '+(e.t<t0+864e5?'Bugün':'Yarın')+' '+hm+' '+n(e.h)+' – '+n(e.a))});return out}
 function tickTxt(){const d0=new Date();d0.setHours(0,0,0,0);const c={};let n=0;
  const P=[];S.entries.filter(e=>e.q&&e.t>=+d0).sort((a,b)=>b.t-a.t).forEach(e=>{const m=S.members.find(x=>x.id===e.m);P.push('🎁 '+(m?m.name:'Biri')+' herkese '+e.d+' ısmarladı!')});
  S.entries.forEach(e=>{if(!e.k&&e.p>0&&e.t>=+d0){c[e.d]=(c[e.d]||0)+(e.q||1);n++}});
  if(n){P.push('🔥 Bugün Hane’de '+Object.entries(c).sort((a,b)=>b[1]-a[1]).map(x=>x[1]+' '+x[0]).join(' · ')+' içildi')}
  else P.push('☕ Bugün henüz kimse bir şey içmedi, ilk sen ol!');
+ P.push(...matchTxt());
  return P.join('     •     ')}
 function tickDraw(){const w=document.getElementById('tick');if(!w)return;const on=view==='home';w.hidden=!on;if(!on)return;const t=tickTxt();if(w.dataset.t===t)return;w.dataset.t=t;const k=w.firstChild;k.innerHTML='<span>'+esc(t)+'</span><span aria-hidden="true">'+esc(t)+'</span>';k.style.animationDuration='14s'}
 function kasaTot(){const inc=-S.entries.filter(e=>e.k==='pay').reduce((s,e)=>s+e.p,0),aid=Object.values(S.dues).reduce((s,r)=>s+r.a,0),oth=S.cash.filter(x=>x.k==='in').reduce((s,x)=>s+x.a,0),exp=S.cash.filter(x=>x.k==='out').reduce((s,x)=>s+x.a,0);return S.open+inc+aid+oth-exp}
@@ -847,7 +856,7 @@ function netState(){
  if(NET.cache)return['wait','Bağlanıyor…','İnternet var ama sunucuyla bağlantı henüz kurulmadı.'];
  return['ok','Bağlı','Her şey yolunda: kayıtlar sunucuya gidiyor ve diğer cihazlarla eşleşiyor.']}
 function netDraw(){const el=document.getElementById('net');if(!el)return;const s=netState();el.className=s[0];el.querySelector('span').textContent=s[1];const f=document.querySelector('.fst');if(f){f.className='fst '+s[0];f.querySelector('b').textContent=s[1]}}
-window.addEventListener('online',netDraw);window.addEventListener('offline',netDraw);setInterval(netDraw,5000);setInterval(tickDraw,60000);
+window.addEventListener('online',netDraw);window.addEventListener('offline',netDraw);setInterval(netDraw,5000);setInterval(tickDraw,60000);setTimeout(()=>matchLoad(),2500);setInterval(()=>matchLoad(),36e5);
 async function initDb(){try{
  if(!window.firebase)throw new Error('sdk');
  if(!firebase.apps.length){firebase.initializeApp(FBCFG);
