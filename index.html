@@ -103,6 +103,23 @@ input{background:var(--sf);border:2px solid var(--ln);border-radius:12px;padding
 #beer.out .liq{transform:translateY(100%);transition:transform .9s ease-in}
 button.topup{background:#1b7f46;color:#fff;border-radius:14px;padding:12px 22px;font-weight:800;min-height:48px}
 header.hh{margin-top:-12px;margin-bottom:14px}
+.k3i{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:4px 0 6px}
+.k3i>div{background:var(--sf);border:2px solid var(--ln);border-radius:18px;padding:12px 16px;display:flex;flex-direction:column;gap:2px}
+.k3i span{font-size:13px;color:var(--mu);font-weight:700}.k3i b{font-size:24px;font-weight:900;white-space:nowrap}.k3i b.o{color:var(--ac)}
+.k3i .fr{background:color-mix(in srgb,#2e9e5b 14%,var(--sf));border-color:color-mix(in srgb,#2e9e5b 50%,var(--ln))}.k3i .fr b{color:#2e9e5b}.k3i .fr b.neg{color:var(--bad)}
+.iplan{background:var(--sf);border:2px solid var(--ln);border-radius:18px;padding:14px 16px;margin-bottom:12px}.iplan.done{opacity:.6}
+.ih{display:flex;flex-direction:column;gap:8px;margin-bottom:8px}.ih>div:first-child{display:flex;justify-content:space-between;align-items:baseline;gap:10px}.ih b{font-size:20px}.ih small{color:var(--mu);font-weight:700;font-size:14px}
+.ipb{height:8px;border-radius:99px;background:color-mix(in srgb,var(--ac) 25%,var(--bg));overflow:hidden}.ipb i{display:block;height:100%;background:#2e9e5b}
+.irow{display:grid;grid-template-columns:30px 1fr auto auto auto;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--ln)}.irow .in{color:var(--mu);font-weight:800}.irow b{font-size:17px}
+.irow.paid{color:var(--mu)}.irow.paid b{text-decoration:line-through}
+.ist{font-size:12.5px;font-weight:800;padding:4px 10px;border-radius:99px;background:color-mix(in srgb,var(--mu) 15%,transparent);color:var(--mu);white-space:nowrap}
+.ist.ok{background:color-mix(in srgb,#2e9e5b 18%,transparent);color:#2e9e5b}.ist.warn{background:color-mix(in srgb,var(--ac) 22%,transparent);color:var(--ac)}.ist.bad{background:color-mix(in srgb,#d33 18%,transparent);color:#d33}
+.ipay{min-height:36px;padding:0 12px;border-radius:10px;background:#2e9e5b;color:#fff;font-weight:800;font-size:14px;border:0}
+.iact{display:flex;justify-content:flex-end;margin-top:8px}.iact .ghost{font-size:14px;min-height:38px;padding:0 12px}
+.iempty{padding:20px;text-align:center;color:var(--mu);border:2px dashed var(--ln);border-radius:16px;margin-bottom:12px}
+.box.idlg{width:min(480px,100%)}.idlg label{display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:14px;margin-top:12px}.idlg label small{font-weight:500;color:var(--mu)}.idlg input{font-size:18px;min-height:48px}
+.idlg .i2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.isum{margin-top:14px;padding:12px 14px;border-radius:14px;background:color-mix(in srgb,var(--ac) 12%,var(--sf));border:2px solid var(--ac);font-weight:700}.isum b{color:var(--ac);font-size:20px}.isum small{color:var(--mu);font-weight:600}
+@media (max-width:560px){.irow .ist{justify-self:start}.irow{grid-template-columns:24px 1fr auto;row-gap:6px}.irow .ist{grid-column:2}.irow .ipay{grid-column:3}}
 .kduo{display:flex;flex:1;background:var(--sf);border:2px solid var(--ln);border-radius:22px;overflow:hidden}
 .kduo>div{flex:1;display:flex;flex-direction:column;justify-content:center;padding:10px 16px;gap:2px;min-width:0}
 .kduo span{font-size:13px;color:var(--mu);font-weight:600;white-space:nowrap}.kduo b{font-size:26px;font-weight:900;white-space:nowrap}
@@ -258,11 +275,33 @@ if(!S||!S.members)S=defaults();
 if(!S.dues)S.dues={};if(typeof S.aidat!=='number')S.aidat=0;
 if(!S.cash)S.cash=[];if(typeof S.open!=='number')S.open=0;
 if(!Array.isArray(S.cats))S.cats=CATS0.slice();
+if(!Array.isArray(S.inst))S.inst=[];
 let DB=null,rY=new Date().getFullYear(),rM=new Date().getMonth(),dY=new Date().getFullYear(),cY=new Date().getFullYear(),cM=new Date().getMonth();
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 function cfgSave(){save();if(DB)DB.doc('cfg/main').set({pin:S.pin,members:S.members,drinks:S.drinks,aidat:S.aidat,dues:S.dues,open:S.open,cats:S.cats}).catch(netErr)}
 function entSave(e){save();if(DB)DB.collection('entries').doc(e.id).set(e).catch(netErr)}
 function entDel(id){S.entries=S.entries.filter(x=>x.id!==id);save();if(DB)DB.collection('entries').doc(id).delete().catch(netErr)}
+function instSave(x){save();if(DB)DB.collection('inst').doc(x.id).set(x).catch(netErr)}
+function instDel(id){S.inst=S.inst.filter(x=>x.id!==id);save();if(DB)DB.collection('inst').doc(id).delete().catch(netErr)}
+const instDue=()=>S.inst.filter(x=>!x.paid).reduce((s,x)=>s+x.a,0);
+const dday=t=>{const a=new Date();a.setHours(0,0,0,0);return Math.round((t-a)/864e5)};
+const dfmt=t=>new Date(t).toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
+function instHtml(){if(!S.inst.length)return '<div class="iempty">Henüz taksit yok.</div>';
+ const G={};S.inst.forEach(x=>{(G[x.g]=G[x.g]||[]).push(x)});
+ return Object.values(G).sort((a,b)=>Math.min(...a.filter(x=>!x.paid).map(x=>x.due),9e15)-Math.min(...b.filter(x=>!x.paid).map(x=>x.due),9e15)).map(L=>{L.sort((a,b)=>a.due-b.due);const tot=L.length,pd=L.filter(x=>x.paid).length,rem=L.filter(x=>!x.paid).reduce((s,x)=>s+x.a,0),f=L[0];
+  return '<div class="iplan'+(rem?'':' done')+'"><div class="ih"><div><b>'+esc(f.d)+'</b><small>'+pd+'/'+tot+' ödendi'+(rem?' · kalan '+money(rem):' · bitti ✓')+'</small></div><div class="ipb"><i style="width:'+Math.round(pd/tot*100)+'%"></i></div></div>'+
+  L.map(x=>{const n=dday(x.due),st=x.paid?'<span class="ist ok">✓ Ödendi</span>':n<0?'<span class="ist bad">'+(-n)+' gün geçti</span>':n===0?'<span class="ist bad">Bugün</span>':n<=7?'<span class="ist warn">'+n+' gün kaldı</span>':'<span class="ist">Bekliyor</span>';
+   return '<div class="irow'+(x.paid?' paid':'')+'"><span class="in">'+x.n+'.</span><span class="idt">'+dfmt(x.due)+'</span><b>'+money(x.a)+'</b>'+st+(x.paid?'':'<button class="ipay" data-a="ipay" data-id="'+x.id+'">Ödendi</button>')+'</div>'}).join('')+
+  '<div class="iact"><button class="ghost" data-a="idel" data-id="'+f.g+'">Planı sil</button></div></div>'}).join('')}
+function instDlg(){const o=document.createElement('div');o.className='ov';const d0=new Date();d0.setMonth(d0.getMonth()+1);
+ o.innerHTML='<div class="box idlg"><h3>➕ Taksit ekle</h3><label>Açıklama<input id="i_d" placeholder="Örn. Klima, televizyon" autocomplete="off"></label><div class="i2"><label>Taksit tutarı (₺)<input id="i_a" type="number" inputmode="decimal" min="0" placeholder="4000"></label><label>Kalan taksit<input id="i_n" type="number" inputmode="numeric" min="1" max="60" value="6"></label></div><label>İlk (sıradaki) ödeme tarihi<input id="i_t" type="date" value="'+d0.toISOString().slice(0,10)+'"></label><label>Bu plan kaçıncı taksitten başlıyor? <small>(ödenmişler varsa)</small><input id="i_s" type="number" inputmode="numeric" min="1" value="1"></label><div class="isum" id="i_sum"></div><div class="row"><button class="ghost" data-r="0">Vazgeç</button><button class="main" data-r="1">Kaydet</button></div></div>';
+ document.body.appendChild(o);const v=id=>o.querySelector(id).value;
+ const upd=()=>{const a=+v('#i_a')||0,n=Math.max(1,+v('#i_n')||1),t=new Date(v('#i_t')||Date.now());const e=new Date(t);e.setMonth(e.getMonth()+n-1);o.querySelector('#i_sum').innerHTML=a?n+' × '+money(a)+' = <b>'+money(a*n)+'</b><br><small>Son taksit: '+dfmt(e.getTime())+'</small>':'<small>Tutarı girince toplam burada görünür.</small>'};
+ o.oninput=upd;upd();
+ o.onclick=e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.r==='0'){o.remove();return}
+  if(b.dataset.r==='1'){const d=v('#i_d').trim(),a=+v('#i_a'),n=Math.min(60,Math.max(1,+v('#i_n')||1)),s=Math.max(1,+v('#i_s')||1),t=v('#i_t');if(!d||!(a>0)||!t){toast('Açıklama, tutar ve tarihi doldur');return}
+   const g=uid(),[Y,M,D]=t.split('-').map(Number);for(let i=0;i<n;i++){const x={id:uid(),g,d,a,n:s+i,due:new Date(Y,M-1+i,D,12).getTime(),paid:false};S.inst.push(x);instSave(x)}
+   o.remove();render();snd('ok');toast('Taksit planı eklendi')}}}
 function cashSave(e){save();if(DB)DB.collection('cash').doc(e.id).set(e).catch(netErr)}
 function tickTxt(){const d0=new Date();d0.setHours(0,0,0,0);const c={};let n=0;
  const P=[];S.entries.filter(e=>e.q&&e.t>=+d0).sort((a,b)=>b.t-a.t).forEach(e=>{const m=S.members.find(x=>x.id===e.m);P.push('🎁 '+(m?m.name:'Biri')+' herkese '+e.d+' ısmarladı!')});
@@ -359,7 +398,10 @@ function render(){setTimeout(tickDraw,0);document.body.classList.toggle('vhome',
   const s0=new Date(cY,cM,1).getTime(),e0=new Date(cY,cM+1,1).getTime(),lab=new Date(cY,cM,1).toLocaleDateString('tr-TR',{month:'long',year:'numeric'});
   const ls=S.cash.filter(x=>x.t>=s0&&x.t<e0).sort((x,y)=>y.t-x.t),mexp=ls.filter(x=>x.k==='out').reduce((s,x)=>s+x.a,0),min=ls.filter(x=>x.k==='in').reduce((s,x)=>s+x.a,0);
   const chips=chipsHtml();
+  const due=instDue();
   a.innerHTML='<header><div><button class="ghost" data-a="admin">‹ Yönetim</button><h1 style="margin-top:14px">Masraf ve kasa</h1></div><div class="bal"><span>Kasadaki para</span><b'+(total<0?' style="color:var(--bad)"':'')+'>'+money(total)+'</b></div></header>'+
+  '<div class="k3i"><div><span>📅 Ödenecek taksitler</span><b class="o">− '+money(due)+'</b></div><div class="fr"><span>Taksitler sonrası kalan</span><b'+(total-due<0?' class="neg"':'')+'>'+money(total-due)+'</b></div></div>'+
+  '<h2 style="display:flex;justify-content:space-between;align-items:center;gap:10px">Taksitler<button class="main" data-a="iadd" style="font-size:16px;min-height:44px;padding:0 16px">➕ Taksit ekle</button></h2>'+instHtml()+
   '<h2>Kasa nasıl hesaplanıyor</h2><div class="log">'+
   '<div class="cl"><span class="d">Açılış bakiyesi</span><input data-f="open" type="number" inputmode="decimal" step="0.5" value="'+S.open+'" style="width:150px"></div>'+
   '<div class="cl"><span class="d">+ İçecek hesaplarından alınan ödemeler</span><b>'+money(inc)+'</b></div>'+
@@ -485,6 +527,11 @@ document.addEventListener('click',async e=>{
  else if(a==='cprev'){cM--;if(cM<0){cM=11;cY--}render()}
  else if(a==='cnext'){cM++;if(cM>11){cM=0;cY++}render()}
  else if(a==='chip'){const el=document.getElementById('cd'),am=document.getElementById('ca');if(el){el.value=b.dataset.v;if(am)am.focus()}}
+ else if(a==='iadd')instDlg();
+ else if(a==='ipay'){const x=S.inst.find(y=>y.id===id);if(!x)return;const tot=S.inst.filter(y=>y.g===x.g).length;
+  if(!await dlg({title:'Taksit ödendi mi?',msg:esc(x.d)+' '+x.n+'. taksit · '+money(x.a)+'<br>Bu tutar kasaya masraf olarak yazılacak.',ok:'Evet, ödendi',cancel:'Vazgeç'}))return;
+  const ce={id:uid(),k:'out',d:'Taksit: '+x.d+' ('+x.n+'. taksit)',a:x.a,t:Date.now()};S.cash.push(ce);cashSave(ce);x.paid=true;x.paidAt=Date.now();x.cid=ce.id;instSave(x);render();snd('ok');toast('Taksit ödendi, kasadan düştü')}
+ else if(a==='idel'){const L=S.inst.filter(y=>y.g===id);if(!L.length)return;if(!await dlg({title:'Plan silinsin mi?',msg:esc(L[0].d)+' taksit planı silinecek. Ödenmiş taksitlerin masraf kayıtları kasada kalır.',ok:'Sil',cancel:'Vazgeç'}))return;L.forEach(x=>instDel(x.id));render();toast('Plan silindi')}
  else if(a==='cout'||a==='cin'){
   const dv=document.getElementById('cd').value.trim(),av=parseFloat(String(document.getElementById('ca').value).replace(',','.'));
   if(!dv){toast('Açıklama yaz');return}
@@ -812,6 +859,7 @@ async function initDb(){try{
  cd.onSnapshot(sn=>{if(!sn.exists)return;const d=JSON.parse(JSON.stringify(sn.data()));S.pin=d.pin;S.members=d.members;S.drinks=d.drinks;S.aidat=d.aidat||0;S.dues=d.dues||{};S.open=d.open||0;S.cats=Array.isArray(d.cats)?d.cats:CATS0.slice();save();if(!typing())render()},dbErr);
  DB.collection('entries').onSnapshot(q=>{S.entries=q.docs.map(d=>Object.assign({},d.data(),{id:d.id}));save();treatWatch();if(!typing())render()},dbErr);
  const mt={};['cfg','entries','cash'].forEach(k=>{(k==='cfg'?cd:DB.collection(k)).onSnapshot({includeMetadataChanges:true},s=>{mt[k]=s.metadata;NET.pend=Object.keys(mt).some(x=>mt[x].hasPendingWrites);NET.cache=Object.keys(mt).some(x=>mt[x].fromCache);netDraw()},()=>{})});
+ DB.collection('inst').onSnapshot(q=>{S.inst=q.docs.map(d=>Object.assign({},d.data(),{id:d.id}));save();if(!typing())render()},()=>{});
  DB.collection('cash').onSnapshot(q=>{S.cash=q.docs.map(d=>Object.assign({},d.data(),{id:d.id}));save();if(!typing())render()},dbErr);
  render();
 }catch(e){dbErr(e);setTimeout(initDb,10000)}}
