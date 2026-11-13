@@ -124,7 +124,7 @@ header.hh{margin-top:-12px;margin-bottom:14px}
 .kduo{display:flex;flex:1;background:var(--sf);border:2px solid var(--ln);border-radius:22px;overflow:hidden}
 .kduo>div{flex:1;display:flex;flex-direction:column;justify-content:center;padding:10px 16px;gap:2px;min-width:0}
 .kduo span{font-size:13px;color:var(--mu);font-weight:600;white-space:nowrap}.kduo b{font-size:26px;font-weight:900;white-space:nowrap}
-.kduo .kk{background:color-mix(in srgb,#2e9e5b 14%,var(--sf));border-right:2px solid var(--ln)}.kduo .kk b{color:#2e9e5b}.kduo .ka b{color:var(--ac)}
+.kduo .kk{background:color-mix(in srgb,#2e9e5b 14%,var(--sf));border-right:2px solid var(--ln)}.kduo .kk b{color:#2e9e5b}.kduo .kk.neg{background:color-mix(in srgb,var(--bad) 14%,var(--sf))}.kduo .kk.neg b{color:var(--bad)}.kduo .ka b{color:var(--ac)}
 @media (max-width:560px){.kduo>div{padding:10px 12px}.kduo b{font-size:clamp(18px,5.6vw,24px)}}
 .mg+.bar{margin-top:12px}
 #clk{text-align:center;line-height:1.05;margin:0 auto;align-self:center}
@@ -410,7 +410,7 @@ function render(){setTimeout(tickDraw,0);document.body.classList.toggle('vhome',
  const a=document.getElementById('app');
  if(view==='home'){
   const tot=S.members.reduce((s,m)=>s+Math.max(0,bal(m.id)),0);
-  a.innerHTML='<header class="hh"><div><h1 style="font-size:0"><img class="logo lt" src="img/logo.png" alt="Hane"><img class="logo dk" src="img/logo-dark.png" alt="Hane"></h1></div><div id="clk">'+clkHtml()+'</div><div style="display:flex;gap:10px;align-items:center"><button class="ghost" data-a="reload" aria-label="Ekranı yenile" style="min-width:64px;min-height:64px;font-size:28px;padding:0">↻</button><div class="kduo"><div class="kk"><span>🏦 Ana kasa</span><b>'+money(kasaTot())+'</b></div><div class="ka"><span>Açık hesaplar</span><b>'+money(tot)+'</b></div></div></div></header>'+
+  a.innerHTML='<header class="hh"><div><h1 style="font-size:0"><img class="logo lt" src="img/logo.png" alt="Hane"><img class="logo dk" src="img/logo-dark.png" alt="Hane"></h1></div><div id="clk">'+clkHtml()+'</div><div style="display:flex;gap:10px;align-items:center"><button class="ghost" data-a="reload" aria-label="Ekranı yenile" style="min-width:64px;min-height:64px;font-size:28px;padding:0">↻</button><div class="kduo"><div class="kk'+(kasaTot()<0?' neg':'')+'"><span>🏦 Ana kasa</span><b>'+money(kasaTot())+'</b></div><div class="ka"><span>Açık hesaplar</span><b>'+money(tot)+'</b></div></div></div></header>'+
   '<div class="grid mg">'+S.members.map(m=>{const b=bal(m.id);return '<button class="member'+(b>0?' owe':'')+(m.id===topId()?' gold':m.id===secId()?' silver':'')+(isBday(m)?' bd':'')+'" data-a="open" data-id="'+m.id+'">'+(isBday(m)?'<span class="bdtag">🎂 Doğum günü!</span>':'')+(m.id===topId()||m.id===secId()?'<span class="cup" aria-hidden="true"><span class="c3">'+'<i>🏆</i>'.repeat(9)+'</span><b class="flr"></b></span>':'')+'<span class="n">'+esc(m.name)+'</span><span class="b'+(b>0?' has':b<0?' cr':'')+'">'+(b>0?money(b):b<0?'Bakiye '+money(-b):'Hesap temiz')+'</span></button>'}).join('')+'</div>'+
   '<div class="foot"><div class="fst '+netState()[0]+'"><i></i><div><b>'+esc(netState()[1])+'</b><small>'+(DB?'Kayıtlar tüm cihazlarda ortak':'Kayıtlar yalnızca bu cihazda')+'</small></div></div><button class="frul" data-a="rules">📜 Kurallar</button><button class="fadm" data-a="admin">'+ic('lock')+'Yönetim</button></div><div class="sig"><span>© 2026 Hane</span><span>Designed &amp; built by <b>Bora</b></span></div>';
  }else if(view==='rules'){
