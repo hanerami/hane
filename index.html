@@ -6,6 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Hane">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#000000">
 <link rel="apple-touch-icon" href="icon.png">
 <title>Hane</title>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap" rel="stylesheet">
@@ -286,6 +287,8 @@ body.vhome #net{display:none}
 .foot{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:60;margin:0 auto;max-width:1076px;background:color-mix(in srgb,var(--sf) 62%,transparent);-webkit-backdrop-filter:blur(18px) saturate(180%);backdrop-filter:blur(18px) saturate(180%);border:1px solid var(--ln);box-shadow:0 10px 30px rgba(0,0,0,.12);border-radius:22px}
 .frul{background:transparent}
 .sig{margin-bottom:calc(110px + env(safe-area-inset-bottom,0px))!important}
+body::before{content:'';position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0px);background:var(--sbar,var(--bg));z-index:70;pointer-events:none}
+#tick{top:env(safe-area-inset-top,0px)}
 /* GLASS-END */
 </style>
 </head>
@@ -362,7 +365,10 @@ function tickTxt(){const d0=new Date();d0.setHours(0,0,0,0);const c={};let n=0;
  else P.push('☕ Bugün henüz kimse bir şey içmedi, ilk sen ol!');
  P.push(...matchTxt());
  return P.join('     •     ')}
-function tickDraw(){const w=document.getElementById('tick');if(!w)return;const on=view==='home';w.hidden=!on;if(!on)return;const t=tickTxt();if(w.dataset.t===t)return;w.dataset.t=t;const k=w.firstChild;k.innerHTML='<span>'+t+'</span><span aria-hidden="true">'+t+'</span>';k.style.animationDuration='14s'}
+function sbarDraw(){try{const cs=getComputedStyle(document.documentElement),hx=v=>{v=v.trim();if(v[0]!=='#')return null;if(v.length===4)v='#'+v[1]+v[1]+v[2]+v[2]+v[3]+v[3];return [1,3,5].map(i=>parseInt(v.substr(i,2),16))};
+ const bg=hx(cs.getPropertyValue('--bg')),ac=hx(cs.getPropertyValue('--ac'));if(!bg||!ac)return;const c=view==='home'?ac.map((x,i)=>Math.round(x*.72+bg[i]*.28)):bg,col='rgb('+c.join(',')+')';
+ document.documentElement.style.setProperty('--sbar',col);let m=document.querySelector('meta[name="theme-color"]');if(m&&m.content!==col)m.content=col}catch(e){}}
+function tickDraw(){sbarDraw();const w=document.getElementById('tick');if(!w)return;const on=view==='home';w.hidden=!on;if(!on)return;const t=tickTxt();if(w.dataset.t===t)return;w.dataset.t=t;const k=w.firstChild;k.innerHTML='<span>'+t+'</span><span aria-hidden="true">'+t+'</span>';k.style.animationDuration='14s'}
 function kasaTot(){const inc=-S.entries.filter(e=>e.k==='pay').reduce((s,e)=>s+e.p,0),aid=Object.values(S.dues).reduce((s,r)=>s+r.a,0),oth=S.cash.filter(x=>x.k==='in').reduce((s,x)=>s+x.a,0),exp=S.cash.filter(x=>x.k==='out').reduce((s,x)=>s+x.a,0);return S.open+inc+aid+oth-exp}
 function cashDel(id){S.cash=S.cash.filter(x=>x.id!==id);save();if(DB)DB.collection('cash').doc(id).delete().catch(netErr)}
 const typing=()=>document.activeElement&&document.activeElement.tagName==='INPUT';
