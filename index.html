@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Hane">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#000000">
 <link rel="apple-touch-icon" href="icon.png">
 <title>Hane</title>
@@ -366,7 +366,7 @@ function tickTxt(){const d0=new Date();d0.setHours(0,0,0,0);const c={};let n=0;
  P.push(...matchTxt());
  return P.join('     •     ')}
 function sbarDraw(){try{const cs=getComputedStyle(document.documentElement),hx=v=>{v=v.trim();if(v[0]!=='#')return null;if(v.length===4)v='#'+v[1]+v[1]+v[2]+v[2]+v[3]+v[3];return [1,3,5].map(i=>parseInt(v.substr(i,2),16))};
- const bg=hx(cs.getPropertyValue('--bg')),ac=hx(cs.getPropertyValue('--ac'));if(!bg||!ac)return;const c=ac.map((x,i)=>Math.round(x*.72+bg[i]*.28)),col='rgb('+c.join(',')+')';
+ const bg=hx(cs.getPropertyValue('--bg')),ac=hx(cs.getPropertyValue('--ac'));if(!bg||!ac)return;const c=view==='home'?ac.map((x,i)=>Math.round(x*.72+bg[i]*.28)):bg,col='rgb('+c.join(',')+')';
  document.documentElement.style.setProperty('--sbar',col);let m=document.querySelector('meta[name="theme-color"]');if(m&&m.content!==col)m.content=col}catch(e){}}
 function tickDraw(){sbarDraw();const w=document.getElementById('tick');if(!w)return;const on=view==='home';w.hidden=!on;if(!on)return;const t=tickTxt();if(w.dataset.t===t)return;w.dataset.t=t;const k=w.firstChild;k.innerHTML='<span>'+t+'</span><span aria-hidden="true">'+t+'</span>';k.style.animationDuration='14s'}
 function kasaTot(){const inc=-S.entries.filter(e=>e.k==='pay').reduce((s,e)=>s+e.p,0),aid=Object.values(S.dues).reduce((s,r)=>s+r.a,0),oth=S.cash.filter(x=>x.k==='in').reduce((s,x)=>s+x.a,0),exp=S.cash.filter(x=>x.k==='out').reduce((s,x)=>s+x.a,0);return S.open+inc+aid+oth-exp}
