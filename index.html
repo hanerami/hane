@@ -271,6 +271,22 @@ body.vhome #net{display:none}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .dc.ok{color:#6fe0a0}}
 :root[data-theme="dark"] .dc.ok{color:#6fe0a0}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+/* GLASS-START */
+:root{--bg:#f5f5f7;--sf:#fff;--ln:rgba(0,0,0,.07);--mu:#6e6e73;--tx:#1d1d1f}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#000;--sf:#1c1c1e;--ln:rgba(255,255,255,.09);--mu:#98989d;--tx:#f5f5f7}}
+:root[data-theme="dark"]{--bg:#000;--sf:#1c1c1e;--ln:rgba(255,255,255,.09);--mu:#98989d;--tx:#f5f5f7}
+#tick{position:sticky;top:0;z-index:60;height:40px;background:color-mix(in srgb,var(--ac) 72%,transparent);-webkit-backdrop-filter:blur(16px) saturate(180%);backdrop-filter:blur(16px) saturate(180%)}
+#tick::before,#tick::after{display:none}
+.member:not(.gold):not(.silver):not(.dia),.kduo,.ghost,.bal{border-width:1px!important;box-shadow:0 8px 24px rgba(0,0,0,.06)}
+.member:not(.gold):not(.silver):not(.dia){border-color:var(--ln)!important}
+.member.owe:not(.gold):not(.silver){background:var(--sf)!important;box-shadow:inset 4px 0 0 var(--bad),0 8px 24px rgba(0,0,0,.06)}
+:root[data-theme="dark"] .member:not(.gold):not(.silver):not(.dia),:root[data-theme="dark"] .kduo{box-shadow:0 8px 24px rgba(0,0,0,.6)}
+:root[data-theme="dark"] .member.owe:not(.gold):not(.silver){box-shadow:inset 4px 0 0 var(--bad),0 8px 24px rgba(0,0,0,.6)}
+.kduo{border-color:var(--ln)!important}.kduo .kk{border-right-color:var(--ln)!important}
+.foot{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:60;margin:0 auto;max-width:1076px;background:color-mix(in srgb,var(--sf) 62%,transparent);-webkit-backdrop-filter:blur(18px) saturate(180%);backdrop-filter:blur(18px) saturate(180%);border:1px solid var(--ln);box-shadow:0 10px 30px rgba(0,0,0,.12);border-radius:22px}
+.frul{background:transparent}
+.sig{margin-bottom:calc(110px + env(safe-area-inset-bottom,0px))!important}
+/* GLASS-END */
 </style>
 </head>
 <body>
