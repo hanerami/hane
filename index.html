@@ -322,6 +322,8 @@ body.vhome #net{display:none}
 .chist{display:flex;flex-direction:column}.crow{display:grid;grid-template-columns:1fr auto 40px;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid var(--ln)}
 .crow>div{display:flex;flex-direction:column;min-width:0}.crow b{font-size:16px}.crow small{color:var(--mu);font-size:13px}.crow em{font-style:normal;font-weight:900;white-space:nowrap}.crow.borc em{color:var(--bad)}.crow.odeme em{color:#2e9e5b}
 .crow .ox{width:40px;min-height:40px;padding:0;border-radius:10px;background:transparent;color:var(--mu);border:1px solid var(--ln)}
+.kduo .kc{border-left:2px solid var(--ln)}.kduo .kc b{color:var(--bad)}
+@media (max-width:560px){.kduo:has(.kc)>div{padding:10px 10px}.kduo:has(.kc) b{font-size:19px!important}.kduo:has(.kc) span{font-size:11.5px!important}}
 </style>
 </head>
 <body>
@@ -509,7 +511,7 @@ function render(){setTimeout(tickDraw,0);document.body.classList.toggle('vhome',
  const a=document.getElementById('app');
  if(view==='home'){
   const tot=S.members.reduce((s,m)=>s+Math.max(0,bal(m.id)),0);
-  a.innerHTML='<header class="hh"><div><h1 style="font-size:0"><img class="logo lt" src="img/logo.png" alt="Hane"><img class="logo dk" src="img/logo-dark.png" alt="Hane"></h1></div><div id="clk">'+clkHtml()+'</div><div style="display:flex;gap:10px;align-items:center"><button class="ghost" data-a="reload" aria-label="Ekranı yenile" style="min-width:64px;min-height:64px;font-size:28px;padding:0">↻</button><div class="kduo"><div class="kk'+(kasaTot()<0?' neg':'')+'"><span>🏦 Ana kasa</span><b>'+money(kasaTot())+'</b></div><div class="ka"><span>Açık hesaplar</span><b>'+money(tot)+'</b></div></div></div></header>'+
+  a.innerHTML='<header class="hh"><div><h1 style="font-size:0"><img class="logo lt" src="img/logo.png" alt="Hane"><img class="logo dk" src="img/logo-dark.png" alt="Hane"></h1></div><div id="clk">'+clkHtml()+'</div><div style="display:flex;gap:10px;align-items:center"><button class="ghost" data-a="reload" aria-label="Ekranı yenile" style="min-width:64px;min-height:64px;font-size:28px;padding:0">↻</button><div class="kduo"><div class="kk'+(kasaTot()<0?' neg':'')+'"><span>🏦 Ana kasa</span><b>'+money(kasaTot())+'</b></div><div class="ka"><span>Açık hesaplar</span><b>'+money(tot)+'</b></div>'+(cariTot()>0?'<div class="kc"><span>🤝 Cari borç</span><b>'+money(cariTot())+'</b></div>':'')+'</div></div></header>'+
   '<div class="grid mg">'+S.members.map(m=>{const b=bal(m.id);return '<button class="member'+(b>0?' owe':'')+(m.id===topId()?' gold':m.id===secId()?' silver':b<0?' dia':'')+(isBday(m)?' bd':'')+'" data-a="open" data-id="'+m.id+'">'+(isBday(m)?'<span class="bdtag">🎂 Doğum günü!</span>':'')+(m.id===topId()||m.id===secId()||b<0?'<span class="cup" aria-hidden="true"><span class="c3">'+('<i>'+(b<0?'💎':'🏆')+'</i>').repeat(9)+'</span><b class="flr"></b></span>':'')+'<span class="n">'+esc(m.name)+'</span><span class="b'+(b>0?' has':b<0?' cr':'')+'">'+(b>0?money(b):b<0?'Bakiye '+money(-b):'Hesap temiz')+'</span></button>'}).join('')+'</div>'+
   '<div class="foot"><div class="fst '+netState()[0]+'"><i></i><div><b>'+esc(netState()[1])+'</b><small>'+(DB?'Kayıtlar tüm cihazlarda ortak':'Kayıtlar yalnızca bu cihazda')+'</small></div></div><button class="frul" data-a="rules">📜 Kurallar</button><button class="frul" data-a="lig">🏆 Lig</button><button class="fadm" data-a="admin">'+ic('lock')+'Yönetim</button></div><div class="sig"><span>© 2026 Hane</span><span>Designed &amp; built by <b>Bora</b></span></div>';
  }else if(view==='rules'){
